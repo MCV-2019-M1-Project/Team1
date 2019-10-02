@@ -1,8 +1,6 @@
 # Team 1
 
-```
-TODO: Intro
-```
+TODO
 
 # Getting started
 
@@ -12,6 +10,16 @@ pip3 install virtualenv
 ```
 
 To be able to run the program you've to do the following
+## Windows
+```
+virtualenv env -p python
+env\Scripts\activate.bat
+pip3 install -r requirements.txt
+python src/museum.py
+env\Scripts\deactivate.bat
+```
+
+## Linux
 ```
 virtualenv env -p python3
 source env/bin/activate
