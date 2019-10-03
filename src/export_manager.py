@@ -1,17 +1,17 @@
 from pathlib import Path
 import os
 from image import Image
+from museum_item import MuseumItem
 import pickle
 
 
-def export_image(image):
+def export_museum_item(museum_item):
     """
-    Export an image into JSON file stored on export folder. Add a new entry
-    if that image does not exists, otherwise it will overwrite it
+    Stores an museum item object into data
     Args:
-        - image: is an instance of a Image class
+        - museum_item: is an instance of a MuseumItem class
     """
 
     path = os.path.join(os.path.dirname(__file__), '../data')
-    with open('{}/{}.pkl'.format(path,image.filename), 'wb') as file_obj:
-        pickle.dump(image, file_obj)
+    with open('{}/{}.pkl'.format(path,museum_item.image.filename), 'wb') as file_obj:
+        pickle.dump(museum_item, file_obj)
