@@ -1,6 +1,7 @@
 from image import Image
-from export_manager import export_image
-from import_manager import import_image
+from export_manager import export_museum_item
+from import_manager import import_museum_item
+from museum_item import MuseumItem
 import cv2
 
 # Testing the image class
@@ -14,7 +15,8 @@ print('change to HSV color space')
 img.color_space = 'HSV'
 print('Img color space', img.color_space)
 
-export_image(img)
+museum_item = MuseumItem(img)
+export_museum_item(museum_item)
 
-img = import_image(img.filename)
-print('Img filename restored', img.filename)
+museum_item = import_museum_item(img.filename)
+print('Img filename restored', museum_item.image.filename)
