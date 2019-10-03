@@ -2,9 +2,10 @@ from similarityCalculator import similarityCalculator
 
 class Distance:
     
-    def __init__(self, query_img, db_img):
+    def __init__(self, query_img, db_img, db_img_filename):
         self.query_img = query_img
         self.db_img = db_img
+        self.db_img_filename = db_img_filename
     
     def method(self):
         
@@ -14,7 +15,9 @@ class Distance:
         
         return self.distance
     
-
+    def  db_img_filename(self):
+        
+        return self.db_img_filename
     
     def calc_dist(self, query_hist, db_hist, num_similarities, similarity_method):
         """
