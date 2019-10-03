@@ -121,6 +121,6 @@ dmypy.json
 env
 
 # Ignore the data
-src/*.pkl
+data/*.pkl
 
 # End of https://www.gitignore.io/api/python,visualstudiocode
