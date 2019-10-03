@@ -117,4 +117,10 @@ dmypy.json
 # Ignore all local history of files
 .history
 
+# Forget about virtualenv folders
+env
+
+# Ignore the data
+data/*.pkl
+
 # End of https://www.gitignore.io/api/python,visualstudiocode
