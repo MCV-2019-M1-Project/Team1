@@ -32,7 +32,7 @@ class Image(object):
                 'The filename: {} does not exists'.format(filename))
         
         self._color_space = 'BGR'
-        self._filename = filename
+        self._filename = filename.split('/')[-1:][0][:-4]
         self._img = cv2.imread(filename)
 
     @property
