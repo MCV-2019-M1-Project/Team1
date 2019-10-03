@@ -1,6 +1,7 @@
 from pathlib import Path
 import cv2
 
+
 class Image(object):
     """
     Class to define a Image
@@ -12,7 +13,8 @@ class Image(object):
         """
 
         if not Path(filename).is_file():
-            raise ValueError('The filename: {} does not exists'.format(filename))
+            raise ValueError(
+                'The filename: {} does not exists'.format(filename))
 
         self._color_space = 'BGR'
         self._filename = filename
@@ -39,9 +41,9 @@ class Image(object):
         Returns:
             the filename
         """
-        
+
         return self._filename
-    
+
     @property
     def color_space(self):
         """
@@ -63,8 +65,10 @@ class Image(object):
         """
 
         if new_color_space not in ['BGR', 'HSV', 'LAB']:
-            raise ValueError('The change color space from {} to {} is not implemented yet'.format(self._color_space, new_color_space))
-        
+            raise ValueError(
+                'The change color space from {} to {} is not implemented yet'.
+                format(self._color_space, new_color_space))
+
         if self._color_space == 'BGR':
             if new_color_space == 'HSV':
                 self._img = cv2.cvtColor(self._img, cv2.COLOR_BGR2HSV)
@@ -93,8 +97,12 @@ class Image(object):
         """
 
         return cv2.filter2D(self._img, ddepth, kernel)
-    
-    def calc_histogram(self, channel, hist_size=[256], ranges=[0,256], mask=None):
+
+    def calc_histogram(self,
+                       channel,
+                       hist_size=[256],
+                       ranges=[0, 256],
+                       mask=None):
         """
         Args:
             - channel:
@@ -110,13 +118,14 @@ class Image(object):
         """
 
         return cv2.calcHist([self._img], [channel], mask, hist_size, ranges)
-    
+
     def calc_equalize_hist(self):
         """
         Do an image processing of contrast adjustment using the image's histogram
         """
 
         if self._color_space != 'BGR':
-            raise ValueError('Error: the implicit image must be on BGR color space')
+            raise ValueError(
+                'Error: the implicit image must be on BGR color space')
         im = cv2.cvtColor(self._img, cv2.COLOR_BGR2GRAY)
         return cv2.equalizeHist(im)
