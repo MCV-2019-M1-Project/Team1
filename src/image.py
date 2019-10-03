@@ -10,30 +10,30 @@ class Image(object):
         """
         Initialize an instance of Image. By default the image is stored on
         BGR color space
+        Args:
+            - filename: image file path
         """
 
-        if not Path(filename).is_file():
-            raise ValueError(
-                'The filename: {} does not exists'.format(filename))
-
-        self._color_space = 'BGR'
-        self._filename = filename
-        self._img = cv2.imread(filename)
+        self.set_img(filename)
 
     @property
     def img(self):
         return self._img
 
-    def set_img(self, new_img, color_space):
+    def set_img(self, filename):
         """
         Change the current image
         Args:
-            - new_img: the implicit image will be the new one
-            - color_space: the color space of the new image
+            - filename: image file path
         """
 
-        self._color_space = color_space
-        self._img = new_img
+        if not Path(filename).is_file():
+            raise ValueError(
+                'The filename: {} does not exists'.format(filename))
+        
+        self._color_space = 'BGR'
+        self._filename = filename
+        self._img = cv2.imread(filename)
 
     @property
     def filename(self):
