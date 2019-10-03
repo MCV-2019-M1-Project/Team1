@@ -6,29 +6,15 @@ class Distance:
         self.query_img = query_img
         self.db_img = db_img
     
-    def euclidean(self):
+    def method(self):
         
-        return self.euclidean
+        return self.method
     
-    def L1(self):
+    def distance(self):
+        
+        return self.distance
     
-        return self.L1
-    
-    def x2(self):
-    
-        return self.x2
-    
-    def intersection(self):
-    
-        return self.intersection
-    
-    def hellinger(self):
-    
-        return self.hellinger
-    
-    def correlation(self):
-    
-        return self.correlation
+
     
     def calc_dist(self, query_hist, db_hist, num_similarities, similarity_methods):
         """
@@ -36,19 +22,25 @@ class Distance:
         
         """
         if "euclidean" in similarity_methods:
-            self.euclidean = similarityCalculator.calc_euclidean_dist(query_hist, db_hist)
+            self.method = "euclidean"
+            self.distance = similarityCalculator.calc_euclidean_dist(query_hist, db_hist)
         
         if "L1_dist" in similarity_methods:
-            self.L1  = similarityCalculator.calc_L1_dist(query_hist, db_hist)
+            self.method = "L1_dist"
+            self.distance  = similarityCalculator.calc_L1_dist(query_hist, db_hist)
         
         if "x2_dist" in similarity_methods:
-            self.x2  = similarityCalculator.calc_x2_dist(query_hist, db_hist)
+            self.method = "x2_dist"
+            self.distance  = similarityCalculator.calc_x2_dist(query_hist, db_hist)
         
         if "intersection" in similarity_methods:
-            self.intersection = similarityCalculator.calc_hist_intesection(query_hist, db_hist)
+            self.method = "intersection"
+            self.distance = similarityCalculator.calc_hist_intesection(query_hist, db_hist)
         
         if "hellinger" in similarity_methods:
-            self.hellinger = similarityCalculator.calc_hellinger_kernel(query_hist, db_hist)
+            self.method = "hellinger"
+            self.distance = similarityCalculator.calc_hellinger_kernel(query_hist, db_hist)
             
         if "correlation" in similarity_methods:
-            self.correlation = similarityCalculator.calc_correlation(query_hist, db_hist)
+            self.method = "correlation"
+            self.distance = similarityCalculator.calc_correlation(query_hist, db_hist)
