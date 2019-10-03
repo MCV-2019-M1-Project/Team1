@@ -13,5 +13,6 @@ def export_museum_item(museum_item):
     """
 
     path = os.path.join(os.path.dirname(__file__), '../data')
-    with open('{}/{}.pkl'.format(path,museum_item.image.filename), 'wb') as file_obj:
+    with open('{}/{}.pkl'.format(path, museum_item.image.filename),
+              'wb') as file_obj:
         pickle.dump(museum_item, file_obj)

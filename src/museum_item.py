@@ -1,5 +1,6 @@
 from image import Image
 
+
 class MuseumItem(object):
     def __init__(self, image=None, histogram=None):
         """
@@ -20,7 +21,7 @@ class MuseumItem(object):
         """
 
         return self._image
-    
+
     @property
     def histogram(self):
         """

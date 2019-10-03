@@ -30,7 +30,7 @@ class Image(object):
         if not Path(filename).is_file():
             raise ValueError(
                 'The filename: {} does not exists'.format(filename))
-        
+
         self._color_space = 'BGR'
         self._filename = filename.split('/')[-1:][0][:-4]
         self._img = cv2.imread(filename)

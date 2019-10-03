@@ -13,4 +13,3 @@ def import_museum_item(filename):
     path = os.path.join(os.path.dirname(__file__), '../data')
     with open('{}/{}.pkl'.format(path, filename), 'rb') as file_obj:
         return pickle.load(file_obj)
-    
