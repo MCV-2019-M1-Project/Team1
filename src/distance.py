@@ -16,31 +16,31 @@ class Distance:
     
 
     
-    def calc_dist(self, query_hist, db_hist, num_similarities, similarity_methods):
+    def calc_dist(self, query_hist, db_hist, num_similarities, similarity_method):
         """
         Calc the desired distance
         
         """
-        if "euclidean" in similarity_methods:
+        if similarity_method == "euclidean":
             self.method = "euclidean"
             self.distance = similarityCalculator.calc_euclidean_dist(query_hist, db_hist)
         
-        if "L1_dist" in similarity_methods:
+        elif similarity_method == "L1_dist" :
             self.method = "L1_dist"
             self.distance  = similarityCalculator.calc_L1_dist(query_hist, db_hist)
         
-        if "x2_dist" in similarity_methods:
+        elif similarity_method == "x2_dist":
             self.method = "x2_dist"
             self.distance  = similarityCalculator.calc_x2_dist(query_hist, db_hist)
         
-        if "intersection" in similarity_methods:
+        elif similarity_method == "intersection":
             self.method = "intersection"
             self.distance = similarityCalculator.calc_hist_intesection(query_hist, db_hist)
         
-        if "hellinger" in similarity_methods:
+        elif similarity_method == "hellinger":
             self.method = "hellinger"
             self.distance = similarityCalculator.calc_hellinger_kernel(query_hist, db_hist)
             
-        if "correlation" in similarity_methods:
+        elif similarity_method == "correlation":
             self.method = "correlation"
             self.distance = similarityCalculator.calc_correlation(query_hist, db_hist)
