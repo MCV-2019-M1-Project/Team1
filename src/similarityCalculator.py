@@ -35,18 +35,18 @@ class similarityCalculator:
         # minimum_val = np.sum(np.minimum(self.query_features,self.db_features))/np.sum(self.db_features)
         
         #cv compares histograms with intersection method        
-        hist_intersection =cv2.CompareHist(self.query_features, self.db_features, cv2.HISTCMP_INTERSECT)
+        hist_intersection =cv2.compareHist(self.query_features, self.db_features, cv2.HISTCMP_INTERSECT)
         
         return hist_intersection
         
     def calc_hellinger_kernel(self):
         #Synonym for Bhattacharyya distance 
-        hellinger_dist = cv2.CompareHist(self.query_features, self.db_features, cv2.HISTCMP_HELLINGER)
+        hellinger_dist = cv2.compareHist(self.query_features, self.db_features, cv2.HISTCMP_HELLINGER)
         
         return hellinger_dist
         
     def calc_correlation(self):
-        correlation = cv2.CompareHist(self.query_features, self.db_features, cv2.HISTCMP_CORREL)
+        correlation = cv2.compareHist(self.query_features, self.db_features, cv2.HISTCMP_CORREL)
         
         return correlation
     
