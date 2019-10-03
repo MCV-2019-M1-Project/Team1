@@ -1,15 +1,13 @@
 from pathlib import Path
 import os
-from image import Image
 import pickle
 
 
-def import_image(filename):
+def import_museum_item(filename):
     """
-    Export an image into JSON file stored on export folder. Add a new entry
-    if that image does not exists, otherwise it will overwrite it
+    Import a museum item previously stored on data.
     Args:
-        - filename: is the name of the filename with an image stored
+        - filename: is the name of the museum item filename stored
     """
 
     path = os.path.join(os.path.dirname(__file__), '../data')
