@@ -94,7 +94,7 @@ class Image(object):
 
         return cv2.filter2D(self._img, ddepth, kernel)
     
-    def calc_histogram(channel, hist_size=[256], ranges=[0,256], mask=None):
+    def calc_histogram(self, channel, hist_size=[256], ranges=[0,256], mask=None):
         """
         Args:
             - channel:
@@ -111,15 +111,12 @@ class Image(object):
 
         return cv2.calcHist([self._img], [channel], mask, hist_size, ranges)
     
-    def calc_equalize_hist(image):
+    def calc_equalize_hist(self):
         """
-        The image must be on BGR color space.
         Do an image processing of contrast adjustment using the image's histogram
-        Args:
-            - image: an instance of image class
         """
 
         if self._color_space != 'BGR':
             raise ValueError('Error: the implicit image must be on BGR color space')
-        im = cv2.cvtColor(image.img, cv2.COLOR_BGR2GRAY)
+        im = cv2.cvtColor(self._img, cv2.COLOR_BGR2GRAY)
         return cv2.equalizeHist(im)
