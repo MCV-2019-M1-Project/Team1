@@ -1,6 +1,4 @@
 import numpy as np
-#import matplotlib.pyplot as plt
-#import scipy.io as spio
 from scipy.spatial import distance
 import cv2
 #implement similarity measures to compare images
