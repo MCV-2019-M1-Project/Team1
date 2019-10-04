@@ -22,11 +22,6 @@ class BasicRemovingStrategy(BackgroundRemoverBase):
         self.height_ratio = height_ratio
         self.distance_between_peaks = distance_between_peaks
 
-
-    def _my_find_peaks(self, array):
-        peaks, _ = find_peaks(array, height=np.max(array) / self.height_ratio, distance=self.distance_between_peaks)
-        return peaks
-
     def remove_background(self, numpy_image):
         gray = cv2.cvtColor(numpy_image, cv2.COLOR_BGR2GRAY)
 
