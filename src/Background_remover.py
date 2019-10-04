@@ -1,5 +1,6 @@
 import cv2.cv2 as cv2
 import numpy as np
+from image import Image
 from scipy.signal import find_peaks
 import os
 import glob
@@ -19,7 +20,7 @@ class BasicRemovingStrategy(BackgroundRemoverBase):
         self.height_ratio = height_ratio
         self.distance_between_peaks = distance_between_peaks
 
-    def remove_background(self, numpy_image):
+    def remove_background(self, image):
         """
             TODO
         """
@@ -29,7 +30,7 @@ class BasicRemovingStrategy(BackgroundRemoverBase):
                                   distance=self.distance_between_peaks)
             return peaks
 
-        gray_image = cv2.cvtColor(numpy_image, cv2.COLOR_BGR2GRAY)
+        gray_image = cv2.cvtColor(image.img, cv2.COLOR_BGR2GRAY)
 
         col_var = np.abs(np.gradient(gray_image.mean(0)))
 
@@ -49,9 +50,9 @@ class BasicRemovingStrategy(BackgroundRemoverBase):
             row_var[len(row_var) // 2:]) + len(row_var) // 2
         bottom = bottom_cd[-1]
 
-        self.mask = np.zeros(shape=(numpy_image.shape[0],
-                                    numpy_image.shape[1]),
+        self.mask = np.zeros(shape=(image.img.shape[0],
+                                    image.img.shape[1]),
                              dtype=np.uint8)
         self.mask[top:bottom, left:right] = 255
-        cropped_image = numpy_image[top:bottom, left:right].copy()
+        cropped_image = image.img[top:bottom, left:right].copy()
         return cropped_image
