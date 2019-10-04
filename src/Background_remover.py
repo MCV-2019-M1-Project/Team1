@@ -8,7 +8,6 @@ class BackgroundRemoverBase:
 
     def __init__(self):
         self.mask = None
-        pass
 
     def save_mask(self, mask_filename):
         cv2.imwrite(mask_filename, self.mask)
