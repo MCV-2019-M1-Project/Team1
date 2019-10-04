@@ -47,7 +47,30 @@ def compute_image_comparision(image_ref, image_pred):
     f1 = 2 * precision * recall / (precision + recall)
     return precision, recall, f1
 
+def global_binarized_image_comparisions(refs_images, preds_images):
+    """
+    Computes the precision, recall and f1 score between a list of binarized image and its predicitons
+    Args:
+        - refs_images: list of gound truth images
+        - preds_images: list of predicted images
+    Returns:
+        - precision: mean of the precision of the predicted images in comparision to the original images
+        - recall: mean of the recall of the predicted images in comparision to the original images
+        - f1: mean of the f1 score of the predicted images in comparision to the original images
+    """
+    precision = 0.0
+    recall = 0.0
+    f1 = 0.0
+    for i in range(len(refs_images)):
+        precision_aux, recall_aux, f1_aux = compute_image_comparision(refs_images[i], preds_images[i])
+        precision +=precision_aux
+        recall += recall_aux
+        f1 += f1_aux
+    return precision / float(len(refs_images)), recall / float(len(refs_images)), f1 / float(len(refs_images))
+
+
 def test_compute_image_comparision():
     a = np.array([[1,0,1],[1,0,1]])
+    aa = np.array([[1,0,1],[1,0,0]])
     b = np.array([[1,0,1],[1,0,0]])
-    return(compute_image_comparision(a,b))
+    return(global_binarized_image_comparisions([a,aa],[b,b]))
