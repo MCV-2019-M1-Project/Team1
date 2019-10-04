@@ -21,14 +21,12 @@ class BackgroundRemoverBase:
 
 
 class BasicRemovingStrategy(BackgroundRemoverBase):
-    def __init__(self, height_ratio=10, distance_between_peaks=10):
+    def __init__(self):
         """
             TODO
         """
 
         super().__init__()
-        self.height_ratio = height_ratio
-        self.distance_between_peaks = distance_between_peaks
 
     def remove_background(self, image, height_ratio, distance_between_peaks):
         """
