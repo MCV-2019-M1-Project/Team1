@@ -34,24 +34,25 @@ class BasicRemovingStrategy(BackgroundRemoverBase):
 
         col_var = np.abs(np.gradient(gray_image.mean(0)))
 
-        left_cd = my_find_peaks(col_var[:len(col_var) // 2], height_ratio, distance_between_peaks)
+        left_cd = my_find_peaks(col_var[:len(col_var) // 2], height_ratio,
+                                distance_between_peaks)
         left = left_cd[0]
 
-        right_cd = my_find_peaks(
-            col_var[len(col_var) // 2:], height_ratio, distance_between_peaks) + len(col_var) // 2
+        right_cd = my_find_peaks(col_var[len(col_var) // 2:], height_ratio,
+                                 distance_between_peaks) + len(col_var) // 2
         right = right_cd[-1]
 
         row_var = np.abs(np.gradient(gray_image.mean(1)))
 
-        top_cd = my_find_peaks(row_var[:len(row_var) // 2], height_ratio, distance_between_peaks)
+        top_cd = my_find_peaks(row_var[:len(row_var) // 2], height_ratio,
+                               distance_between_peaks)
         top = top_cd[0]
 
-        bottom_cd = my_find_peaks(
-            row_var[len(row_var) // 2:], height_ratio, distance_between_peaks) + len(row_var) // 2
+        bottom_cd = my_find_peaks(row_var[len(row_var) // 2:], height_ratio,
+                                  distance_between_peaks) + len(row_var) // 2
         bottom = bottom_cd[-1]
 
-        self.mask = np.zeros(shape=(image.img.shape[0],
-                                    image.img.shape[1]),
+        self.mask = np.zeros(shape=(image.img.shape[0], image.img.shape[1]),
                              dtype=np.uint8)
         self.mask[top:bottom, left:right] = 255
         cropped_image = image.img[top:bottom, left:right].copy()
