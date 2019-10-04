@@ -20,11 +20,11 @@ class BasicRemovingStrategy(BackgroundRemoverBase):
         self.height_ratio = height_ratio
         self.distance_between_peaks = distance_between_peaks
 
-    def remove_background(self, image):
+    def remove_background(self, image, height_ratio, distance_between_peaks):
         """
             TODO
         """
-        def my_find_peaks(array):
+        def my_find_peaks(array, height_ratio, distance_between_peaks):
             peaks, _ = find_peaks(array,
                                   height=np.max(array) / self.height_ratio,
                                   distance=self.distance_between_peaks)
@@ -34,20 +34,20 @@ class BasicRemovingStrategy(BackgroundRemoverBase):
 
         col_var = np.abs(np.gradient(gray_image.mean(0)))
 
-        left_cd = my_find_peaks(col_var[:len(col_var) // 2])
+        left_cd = my_find_peaks(col_var[:len(col_var) // 2], height_ratio, distance_between_peaks)
         left = left_cd[0]
 
         right_cd = my_find_peaks(
-            col_var[len(col_var) // 2:]) + len(col_var) // 2
+            col_var[len(col_var) // 2:], height_ratio, distance_between_peaks) + len(col_var) // 2
         right = right_cd[-1]
 
         row_var = np.abs(np.gradient(gray_image.mean(1)))
 
-        top_cd = my_find_peaks(row_var[:len(row_var) // 2])
+        top_cd = my_find_peaks(row_var[:len(row_var) // 2], height_ratio, distance_between_peaks)
         top = top_cd[0]
 
         bottom_cd = my_find_peaks(
-            row_var[len(row_var) // 2:]) + len(row_var) // 2
+            row_var[len(row_var) // 2:], height_ratio, distance_between_peaks) + len(row_var) // 2
         bottom = bottom_cd[-1]
 
         self.mask = np.zeros(shape=(image.img.shape[0],
