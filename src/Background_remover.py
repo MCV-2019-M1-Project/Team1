@@ -50,12 +50,3 @@ class BasicRemovingStrategy(BackgroundRemoverBase):
         self.mask[top:bottom, left:right] = 255
         cropped_image = numpy_image[top:bottom, left:right].copy()
         return cropped_image
-
-
-if __name__ == "__main__":
-
-    bbr = BasicRemovingStrategy()
-    for pic_path in glob.glob("../qsd2_w1/*.jpg"):
-        im = cv2.imread(pic_path)
-        bbr.remove_background(im)
-        bbr.save_mask(os.path.join("../qsd2_w1",os.path.splitext(pic_path)[0]+"_predicted.png"))
