@@ -7,7 +7,6 @@ class Distance:
     def __init__(self, query_img, db_img):
         self.query_img = query_img
         self.db_img = db_img
-#        self.db_img_filename = db_img_filename
     
     def method(self):
         
@@ -21,7 +20,14 @@ class Distance:
         
         return self.db_img.filename
     
+    def maximization(self):
+        """
+        True if method requires maximization, False if minimization
 
+        """
+        
+        return self.maximization
+        
     
     def calc_dist(self, similarity_method):
         """
@@ -38,29 +44,36 @@ class Distance:
         if similarity_method == "euclidean":
             self.method = "euclidean"
             self.distance = distance.euclidean(query_hist, db_hist)
+            self.maximization = False
             return self.distance
         
         elif similarity_method == "L1_dist" :
             self.method = "L1_dist"
             self.distance  = distance.cityblock(query_hist, db_hist)
+            self.maximization = False
             return self.distance
         
         elif similarity_method == "x2_dist":
             self.method = "x2_dist"
             self.distance  = np.sum((query_hist-db_hist)**2/(query_hist-db_hist+1e-6))
+            self.maximization = False
             return self.distance
         
         elif similarity_method == "intersection":
             self.method = "intersection"
             self.distance = cv2.compareHist(query_hist, db_hist, cv2.HISTCMP_INTERSECT)
+            self.maximization = True
             return self.distance
         
         elif similarity_method == "hellinger":
             self.method = "hellinger"
             self.distance = cv2.compareHist(query_hist, db_hist, cv2.HISTCMP_HELLINGER)
+            self.maximization = False
             return self.distance
             
         elif similarity_method == "correlation":
             self.method = "correlation"
             self.distance = cv2.compareHist(query_hist, db_hist, cv2.HISTCMP_CORREL)
+            self.maximization = True
             return self.distance
+        
