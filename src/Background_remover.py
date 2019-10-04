@@ -29,9 +29,9 @@ class BasicRemovingStrategy(BackgroundRemoverBase):
                                   distance=self.distance_between_peaks)
             return peaks
 
-        gray = cv2.cvtColor(numpy_image, cv2.COLOR_BGR2GRAY)
+        gray_image = cv2.cvtColor(numpy_image, cv2.COLOR_BGR2GRAY)
 
-        col_var = np.abs(np.gradient(gray.mean(0)))
+        col_var = np.abs(np.gradient(gray_image.mean(0)))
 
         left_cd = my_find_peaks(col_var[:len(col_var) // 2])
         left = left_cd[0]
@@ -40,7 +40,7 @@ class BasicRemovingStrategy(BackgroundRemoverBase):
             col_var[len(col_var) // 2:]) + len(col_var) // 2
         right = right_cd[-1]
 
-        row_var = np.abs(np.gradient(gray.mean(1)))
+        row_var = np.abs(np.gradient(gray_image.mean(1)))
 
         top_cd = my_find_peaks(row_var[:len(row_var) // 2])
         top = top_cd[0]
