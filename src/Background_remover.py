@@ -12,7 +12,7 @@ class BackgroundRemoverBase:
 
         self.mask = None
 
-    def save_mask(self, mask_filename):
+    def store_mask(self, mask_filename):
         """
             TODO
         """
