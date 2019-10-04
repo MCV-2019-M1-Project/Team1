@@ -1,1 +1,4 @@
 ml_metrics
+opencv-python
+numpy
+scipy>=1.3
