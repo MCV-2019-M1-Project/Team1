@@ -23,6 +23,10 @@ class BasicRemovingStrategy(BackgroundRemoverBase):
         self.distance_between_peaks = distance_between_peaks
 
     def remove_background(self, numpy_image):
+        """
+            TODO
+        """
+
         gray = cv2.cvtColor(numpy_image, cv2.COLOR_BGR2GRAY)
 
         col_var = np.abs(np.gradient(gray.mean(0)))
