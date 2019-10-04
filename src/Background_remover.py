@@ -2,8 +2,6 @@ import cv2.cv2 as cv2
 import numpy as np
 from image import Image
 from scipy.signal import find_peaks
-import os
-import glob
 
 
 class BackgroundRemoverBase:
