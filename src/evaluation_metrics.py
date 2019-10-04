@@ -29,7 +29,6 @@ def global_mapk(k, images):
         mean_mapk += mapk(k, i)
     return mean_mapk / float(len(images))
 
-
 def binarized_image_comparision(image_ref, image_pred):
     """
     Computes the precision, recall and f1 score between a binarized image and its prediciton
@@ -48,13 +47,13 @@ def binarized_image_comparision(image_ref, image_pred):
     for i in range(image_ref.shape[0]):
         for j in range(image_ref.shape[1]):
             if(image_ref[i][j] and image_pred[i][j]):
-                tp+=1.0
+                tp += 1.0
             elif(image_ref[i][j] and not(image_pred[i][j])):
-                fn+=1.0
+                fn += 1.0
             elif(not(image_ref[i][j]) and image_pred[i][j]):
-                fp+=1.0
+                fp += 1.0
             else:
-                tn+=1.0
+                tn += 1.0
     precision = tp / (tp + fp)
     recall = tp / (tp + fn)
     f1 = 2 * precision * recall / (precision + recall)
