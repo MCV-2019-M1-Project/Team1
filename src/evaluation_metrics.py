@@ -1,6 +1,5 @@
 import ml_metrics as metrics
 import numpy as np
-# numpy.matrix.flatten ??
 
 
 def mapk(k, image):
@@ -16,8 +15,22 @@ def mapk(k, image):
     predicted = [k_retrieval(image)] # llista de llistes dels k predits
     return mmetrics.mapk(k, actual, predicted)
 
+def global_mapk(k, images):
+    """
+    Computes the mean of the mean average precision of a list of images for a k set of predictions of each image
+    Args:
+        - k: number of predictions
+        - images: list of images used to compute the k most similar images
+    Returns:
+        - mean_mapk: mean of the mean average precision of the images for a k predictions
+    """
+    mean_mapk = 0.0
+    for i in images:
+        mean_mapk += mapk(k, i)
+    return mean_mapk / float(len(images))
 
-def compute_image_comparision(image_ref, image_pred):
+
+def binarized_image_comparision(image_ref, image_pred):
     """
     Computes the precision, recall and f1 score between a binarized image and its prediciton
     Args:
@@ -43,7 +56,7 @@ def compute_image_comparision(image_ref, image_pred):
             else:
                 tn+=1.0
     precision = tp / (tp + fp)
-    recall = tp /(tp + fn)
+    recall = tp / (tp + fn)
     f1 = 2 * precision * recall / (precision + recall)
     return precision, recall, f1
 
@@ -68,7 +81,7 @@ def global_binarized_image_comparisions(refs_images, preds_images):
         f1 += f1_aux
     return precision / float(len(refs_images)), recall / float(len(refs_images)), f1 / float(len(refs_images))
 
-
+#TODO: erease
 def test_compute_image_comparision():
     a = np.array([[1,0,1],[1,0,1]])
     aa = np.array([[1,0,1],[1,0,0]])
