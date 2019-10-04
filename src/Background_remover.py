@@ -6,14 +6,26 @@ from scipy.signal import find_peaks
 
 class BackgroundRemoverBase:
     def __init__(self):
+        """
+            TODO
+        """
+
         self.mask = None
 
     def save_mask(self, mask_filename):
+        """
+            TODO
+        """
+
         cv2.imwrite(mask_filename, self.mask)
 
 
 class BasicRemovingStrategy(BackgroundRemoverBase):
     def __init__(self, height_ratio=10, distance_between_peaks=10):
+        """
+            TODO
+        """
+
         super().__init__()
         self.height_ratio = height_ratio
         self.distance_between_peaks = distance_between_peaks
