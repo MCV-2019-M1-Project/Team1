@@ -31,6 +31,8 @@ def run():
         mapk_list.append(mapk(k, act_corresp, k_retrieved))
     mapk_mean = global_mapk(k, query_images, act_corresp, k_retrieved)
 
+    return k_retrieved, mapk_mean
+
 
 
     
