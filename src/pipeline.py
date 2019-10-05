@@ -167,8 +167,8 @@ def load_mask_images(query_folder):
     mask_images = []
     for filename in os.listdir(path):
         if Path(filename).suffix == '.png':
-            mask_images = Image(os.path.join(path, filename))
-            mask_images.append(query_image)
+            mask_image = Image(os.path.join(path, filename))
+            mask_images.append(mask_image)
     return mask_images
 
 def remove_background(images_with_background):

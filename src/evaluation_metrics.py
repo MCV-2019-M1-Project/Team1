@@ -13,7 +13,7 @@ def mapk(k, corresps_list, retrieved_list):
         - mapk: mean average precision of the image for a k set of predictions
     """
     actual = corresps_list
-    predicted = retrieved_list # llista de llistes dels k predits
+    predicted = retrieved_list
     return metrics.mapk(k, actual, predicted)
 
 
@@ -36,8 +36,8 @@ def compute_image_comparision(image_ref, image_pred):
     """
     Computes the precision, recall and f1 score between a binarized image and its prediciton
     Args:
-        - image_ref: gound truth image as numpy.array
-        - image_pred: predicted image as numpy.array
+        - image_ref: gound truth image as an Image
+        - image_pred: predicted image as an Image
     Returns:
         - precision: precision of the predicted image in comparision to the original image
         - recall: recall of the predicted image in comparision to the original image
@@ -47,13 +47,15 @@ def compute_image_comparision(image_ref, image_pred):
     tn = 0.0
     fp = 0.0
     fn = 0.0
-    for i in range(image_ref.shape[0]):
-        for j in range(image_ref.shape[1]):
-            if (image_ref[i][j] and image_pred[i][j]):
+    print("REF ", image_ref.img.shape[0], image_ref.img.shape[1])
+    print("Pred ", image_pred.shape[0], image_pred.shape[1])
+    for i in range(image_ref.img.shape[0]):
+        for j in range(image_ref.img.shape[1]):
+            if (image_ref.img[i][j][0] and image_pred[i][j]):
                 tp += 1.0
-            elif (image_ref[i][j] and not (image_pred[i][j])):
+            elif (image_ref.img[i][j][0] and not (image_pred[i][j])):
                 fn += 1.0
-            elif (not (image_ref[i][j]) and image_pred[i][j]):
+            elif (not (image_ref.img[i][j][0]) and image_pred[i][j]):
                 fp += 1.0
             else:
                 tn += 1.0
