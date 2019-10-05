@@ -130,8 +130,9 @@ def calc_similarty(museum_items, query_image_histogram, method):
         A list of similarities of all museum items against the query image histogram
     """
 
-    similarities = []
+    distances = []
     for museum_item in museum_items:
         distance = Distance(museum_item.histogram, query_image_histogram)
-        similarities.append(distance.calc_dist(method))
-    return similarities
+        distance.calc_dist(method)
+        distances.append(distance)
+    return distances

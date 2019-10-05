@@ -11,11 +11,9 @@ def run():
     pipeline.apply_change_of_color_space(query_images, 'GRAY')
     query_histograms = pipeline.calc_image_histogram(query_images, 0)
 
-    similarities_matrix = []
+    distances = []
     for query_histogram in query_histograms:
-        similarities_matrix.append(
-            pipeline.calc_similarty(museum_items, query_histogram,
-                                    'euclidean'))
+        distances.append(pipeline.calc_similarty(museum_items, query_histogram, 'euclidean'))
 
     # What TODO now
-    evaluation_metrics.mapk()
+    
