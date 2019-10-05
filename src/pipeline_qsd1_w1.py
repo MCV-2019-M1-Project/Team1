@@ -8,6 +8,11 @@ from pipeline import (
 from import_manager import import_all_museum_items
 from museum_item import MuseumItem
 from k_retrieval import k_retrieval
+from evaluation_metrics import (
+    mapk,
+    global_mapk
+)
+
 
 
 def run():
