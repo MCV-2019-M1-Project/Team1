@@ -3,7 +3,7 @@ from k_retrieval import k_retrieval
 import numpy as np
 
 
-def mapk(k, image):
+def mapk(k, museum_items):
     """
     Computes the mean average precision of an image for a k set of predictions
     Args:
