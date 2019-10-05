@@ -12,8 +12,9 @@ def mapk(k, image):
         - mapk: mean average precision of the image for a k set of predictions
     """
     actual = [image]
-    predicted = [k_retrieval(image)] # llista de llistes dels k predits
+    predicted = [k_retrieval(image)]  # llista de llistes dels k predits
     return mmetrics.mapk(k, actual, predicted)
+
 
 def global_mapk(k, images):
     """
@@ -28,6 +29,7 @@ def global_mapk(k, images):
     for i in images:
         mean_mapk += mapk(k, i)
     return mean_mapk / float(len(images))
+
 
 def binarized_image_comparision(image_ref, image_pred):
     """
@@ -46,11 +48,11 @@ def binarized_image_comparision(image_ref, image_pred):
     fn = 0.0
     for i in range(image_ref.shape[0]):
         for j in range(image_ref.shape[1]):
-            if(image_ref[i][j] and image_pred[i][j]):
+            if (image_ref[i][j] and image_pred[i][j]):
                 tp += 1.0
-            elif(image_ref[i][j] and not(image_pred[i][j])):
+            elif (image_ref[i][j] and not (image_pred[i][j])):
                 fn += 1.0
-            elif(not(image_ref[i][j]) and image_pred[i][j]):
+            elif (not (image_ref[i][j]) and image_pred[i][j]):
                 fp += 1.0
             else:
                 tn += 1.0
@@ -58,6 +60,7 @@ def binarized_image_comparision(image_ref, image_pred):
     recall = tp / (tp + fn)
     f1 = 2 * precision * recall / (precision + recall)
     return precision, recall, f1
+
 
 def global_binarized_image_comparisions(refs_images, preds_images):
     """
@@ -74,15 +77,18 @@ def global_binarized_image_comparisions(refs_images, preds_images):
     recall = 0.0
     f1 = 0.0
     for i in range(len(refs_images)):
-        precision_aux, recall_aux, f1_aux = compute_image_comparision(refs_images[i], preds_images[i])
-        precision +=precision_aux
+        precision_aux, recall_aux, f1_aux = compute_image_comparision(
+            refs_images[i], preds_images[i])
+        precision += precision_aux
         recall += recall_aux
         f1 += f1_aux
-    return precision / float(len(refs_images)), recall / float(len(refs_images)), f1 / float(len(refs_images))
+    return precision / float(len(refs_images)), recall / float(
+        len(refs_images)), f1 / float(len(refs_images))
+
 
 #TODO: erease
 def test_compute_image_comparision():
-    a = np.array([[1,0,1],[1,0,1]])
-    aa = np.array([[1,0,1],[1,0,0]])
-    b = np.array([[1,0,1],[1,0,0]])
-    return(global_binarized_image_comparisions([a,aa],[b,b]))
+    a = np.array([[1, 0, 1], [1, 0, 1]])
+    aa = np.array([[1, 0, 1], [1, 0, 0]])
+    b = np.array([[1, 0, 1], [1, 0, 0]])
+    return (global_binarized_image_comparisions([a, aa], [b, b]))
