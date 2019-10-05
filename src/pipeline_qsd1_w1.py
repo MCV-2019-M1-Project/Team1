@@ -24,6 +24,9 @@ def run():
     distances = []
     for query_museum_item in query_museum_items:
         distances.append(calc_similarty(bbdd_museum_items, query_museum_item, 'euclidean'))
+
+    actual_correspondances = load_gt_correspondances('qsd1_w1')
+    
     
 
     

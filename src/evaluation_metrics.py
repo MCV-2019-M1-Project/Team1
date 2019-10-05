@@ -3,7 +3,7 @@ from k_retrieval import k_retrieval
 import numpy as np
 
 
-def mapk(k, museum_items):
+def mapk(k, corresps_list, retrieved_list):
     """
     Computes the mean average precision of an image for a k set of predictions
     Args:
@@ -12,12 +12,12 @@ def mapk(k, museum_items):
     Returns:
         - mapk: mean average precision of the image for a k set of predictions
     """
-    actual = [image]
-    predicted = [k_retrieval(image)]  # llista de llistes dels k predits
+    actual = corresps_list
+    predicted = retrieved_list # llista de llistes dels k predits
     return metrics.mapk(k, actual, predicted)
 
 
-def global_mapk(k, images):
+def global_mapk(k, images, corresps_list, retrieved_list):
     """
     Computes the mean of the mean average precision of a list of images for a k set of predictions of each image
     Args:
@@ -28,7 +28,7 @@ def global_mapk(k, images):
     """
     mean_mapk = 0.0
     for i in images:
-        mean_mapk += mapk(k, i)
+        mean_mapk += mapk(k,corresps_list, retrieved_list)
     return mean_mapk / float(len(images))
 
 
