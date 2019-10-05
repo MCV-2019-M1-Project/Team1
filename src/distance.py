@@ -40,9 +40,7 @@ class Distance:
         
         """
         query_hist = self._query_museum_item.histogram
-        print(query_hist)
         db_hist = self._db_museum_item.histogram
-        print(db_hist)
 
         if similarity_method == "euclidean":
             self._method = "euclidean"
