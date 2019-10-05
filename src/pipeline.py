@@ -179,13 +179,13 @@ def remove_background(images_with_background):
         - the input images without background
         - the used masks
     """
-    
+
     images_without_background = []
     masks = []
 
     remover = BasicRemovingStrategy()
 
     for image in images_with_background:
-        images_without_background.append(remover.remove_background(image, None, 10))
+        images_without_background.append(remover.remove_background(image, 10, 10))
         masks.append(remover.mask)
     return images_without_background, masks
