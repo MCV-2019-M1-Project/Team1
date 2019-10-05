@@ -123,4 +123,8 @@ env
 # Ignore the data
 data/*.pkl
 
+# Ignore the output
+output/*
+!output/.gitkeep
+
 # End of https://www.gitignore.io/api/python,visualstudiocode
