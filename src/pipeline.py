@@ -11,7 +11,7 @@ def load_bbdd_images():
     """
     Load all the images stored on the bbdd folder
     Returns:
-        A list of Image object instances 
+        A list of Image object instances
     """
 
     path = os.path.join(os.path.dirname(__file__), '../bbdd')
@@ -45,7 +45,7 @@ def apply_change_of_color_space(images, color_space):
     """
     Apply to all images a color space change
     Args:
-        - images: a list of Image object instances    
+        - images: a list of Image object instances
         - color_space: the color space to change could be
             * BGR
             * HSV
@@ -65,7 +65,7 @@ def calc_image_histogram(images,
     """
     Calc the histogram of the images
     Args:
-        - images: a list of Image object instances    
+        - images: a list of Image object instances
         - channel:
             * 0 if is a grayscale image
             * 0 calculate blue histogram
@@ -89,7 +89,7 @@ def calc_image_equalize_hist(images):
     """
     Do an image processing of contrast adjustment using the image's histogram
     Args:
-        - images: a list of Image object instances   
+        - images: a list of Image object instances
     Returns:
         A list of equalized histograms based on the given images
     """
@@ -150,3 +150,21 @@ def load_gt_corresps(query_folder):
     with open(corresps_path, 'rb') as f:
         actual_corresps = pickle.load(f)
     return actual_corresps
+
+def load_mask_images(query_folder):
+    """
+    Loads all the mask images stored on the query folder
+    Args:
+        - query_folder: specifies the query_folder name
+    Returns:
+        A list of Image instnaces
+    """
+
+    path = os.path.join(os.path.dirname(__file__),
+                        '../{}'.format(query_folder))
+    mask_images = []
+    for filename in os.listdir(path):
+        if Path(filename).suffix == '.png':
+            mask_images = Image(os.path.join(path, filename))
+            mask_images.append(query_image)
+    return mask_images
