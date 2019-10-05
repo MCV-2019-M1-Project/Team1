@@ -1,3 +1,5 @@
-from pipelines import pipeline_qsd2_w1_offline
+from pipeline_qsd1_w1_offline import run as run_offline_pipeline
+from pipeline_qsd1_w1 import run as run_pipeline
 
-pipeline_qsd2_w1_offline.run()
+run_offline_pipeline()
+run_pipeline()
