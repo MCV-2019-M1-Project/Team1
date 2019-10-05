@@ -1,5 +1,5 @@
 from pathlib import Path
-from cv2 import cv2
+import cv2
 
 
 class Image(object):
