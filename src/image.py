@@ -62,28 +62,43 @@ class Image(object):
                 * BGR
                 * HSV
                 * LAB
+                * GRAY
         """
-
-        if new_color_space not in ['BGR', 'HSV', 'LAB']:
-            raise ValueError(
-                'The change color space from {} to {} is not implemented yet'.
-                format(self._color_space, new_color_space))
 
         if self._color_space == 'BGR':
             if new_color_space == 'HSV':
                 self._img = cv2.cvtColor(self._img, cv2.COLOR_BGR2HSV)
             elif new_color_space == 'LAB':
                 self._img = cv2.cvtColor(self._img, cv2.COLOR_BGR2LAB)
+            elif new_color_space == 'GRAY':
+                self._img = cv2.cvtColor(self._img, cv2.COLOR_BGR2GRAY)
+            else:
+                raise NotImplementedError
+
         elif self._color_space == 'HSV':
             if new_color_space == 'BGR':
                 self._img = cv2.cvtColor(self._img, cv2.COLOR_HSV2BGR)
             elif new_color_space == 'LAB':
                 self._img = cv2.cvtColor(self._img, cv2.COLOR_HSV2LAB)
+            else:
+                raise NotImplementedError
+
         elif self._color_space == 'LAB':
             if new_color_space == 'HSV':
                 self._img = cv2.cvtColor(self._img, cv2.COLOR_LAB2HSV)
             elif new_color_space == 'BGR':
                 self._img = cv2.cvtColor(self._img, cv2.COLOR_LAB2BGR)
+            else:
+                raise NotImplementedError
+
+        elif self._color_space == 'GRAY':
+            if new_color_space == 'BGR':
+                self._img = cv2.cvtColor(self._img, cv2.COLOR_GRAY2BGR)
+            else:
+                raise NotImplementedError
+        else:
+            raise NotImplementedError
+
         self._color_space = new_color_space
 
     def image_filtering(self, ddepth, kernel):
@@ -127,5 +142,9 @@ class Image(object):
         if self._color_space != 'BGR':
             raise ValueError(
                 'Error: the implicit image must be on BGR color space')
-        im = cv2.cvtColor(self._img, cv2.COLOR_BGR2GRAY)
+        if self._color_space != 'GRAY':
+            im = cv2.cvtColor(self._img, cv2.COLOR_BGR2GRAY)
+        else:
+            im = self._img
+
         return cv2.equalizeHist(im)
