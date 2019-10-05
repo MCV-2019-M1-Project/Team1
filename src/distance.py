@@ -72,4 +72,3 @@ class Distance:
             self._distance = cv2.compareHist(query_hist, db_hist, cv2.HISTCMP_CORREL)
             self._maximization = True
             return self._distance
-        

@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+from distance import Distance
 from export_manager import export_museum_item
 from museum_item import MuseumItem
 from image import Image
@@ -112,14 +113,25 @@ def export(images, histograms):
         export_museum_item(museum_item)
 
 
-def calc_similarty(museum_items, query_image_histogram):
+def calc_similarty(museum_items, query_image_histogram, method):
     """
     Calc the similarity of all museum items against the query image histogram
     Args:
         museum_items: a list of museum items
         query_image: an image histogram
+        method: the similarity method
+            * euclidean
+            * L1_dist
+            * x2_dist
+            * intersection
+            * hellinger
+            * correlation
     Returns:
         A list of similarities of all museum items against the query image histogram
     """
 
-    pass
+    similarities = []
+    for museum_item in museum_items:
+        distance = Distance(museum_item.histogram, query_image_histogram)
+        similarities.append(distance.calc_dist(method))
+    return similarities

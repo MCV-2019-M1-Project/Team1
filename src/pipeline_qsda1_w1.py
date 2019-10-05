@@ -1,5 +1,6 @@
-
+from . import evaluation_metrics
 from . import pipeline
+from . import evaluation_metrics
 from import_manager import import_all_museum_items
 
 def run():
@@ -9,8 +10,12 @@ def run():
     pipeline.apply_change_of_color_space(query_images, 'GRAY')
     query_histograms = pipeline.calc_image_histogram(query_images, 0)
 
-    similarities = 
+    similarities_matrix = []
     for query_histogram in query_histograms:
-        pipeline.calc_similarty(museum_items, query_histogram)
+        similarities_matrix.append(pipeline.calc_similarty(museum_items, query_histogram, 'euclidean'))
+
+    # What TODO now
+    evaluation_metrics.mapk()
+
     
     
