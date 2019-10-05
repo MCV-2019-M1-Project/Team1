@@ -12,6 +12,7 @@ from k_retrieval import k_retrieval
 def run():
     query_images = load_query_images('qsd1_w1')
     bbdd_museum_items = import_all_museum_items()
+    actual_correspondances = load_gt_correspondances('qsd1_w1')
 
     apply_change_of_color_space(query_images, 'GRAY')
     query_histograms = calc_image_histogram(query_images, 0)
@@ -25,7 +26,10 @@ def run():
     for query_museum_item in query_museum_items:
         distances.append(calc_similarty(bbdd_museum_items, query_museum_item, 'euclidean'))
 
-    actual_correspondances = load_gt_correspondances('qsd1_w1')
+    
+
+
+
     
     
 
