@@ -135,6 +135,7 @@ def calc_similarty(db_museum_items, query_museum_item, method):
     for db_museum_item in db_museum_items:
         distance = Distance(db_museum_item, query_museum_item)
         distance.calc_dist(method)
+        print(distance.distance)
         distances.append(distance)
     return distances
 
@@ -144,7 +145,7 @@ def load_gt_corresps(query_folder):
     Loads the correspondances file of the query folder and returns the list of real correspondances
     """
 
-    path = os.path.join(os.path.dirname(__file__)+'%s' % os.sep, query_folder)
+    path = os.path.join(os.path.dirname(__file__)+'%s..%s' % (os.sep, os.sep), query_folder)
     corresps_path = os.path.join(path, 'gt_corresps.pkl')
 
     with open(corresps_path, 'rb') as f:
