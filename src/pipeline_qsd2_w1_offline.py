@@ -1,8 +1,8 @@
 from . import pipeline
-
 """
 This file is for calc the images offline
 """
+
 
 def run():
     images = pipeline.load_bbdd_images()
