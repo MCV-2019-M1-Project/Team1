@@ -113,12 +113,12 @@ def export(images, histograms):
         export_museum_item(museum_item)
 
 
-def calc_similarty(museum_items, query_image_histogram, method):
+def calc_similarty(db_museum_items, query_museum_item, method):
     """
     Calc the similarity of all museum items against the query image histogram
     Args:
-        museum_items: a list of museum items
-        query_image: an image histogram
+        db_museum_items: a list of museum items
+        query_museum_item: a query museum item
         method: the similarity method
             * euclidean
             * L1_dist
@@ -131,8 +131,8 @@ def calc_similarty(museum_items, query_image_histogram, method):
     """
 
     distances = []
-    for museum_item in museum_items:
-        distance = Distance(museum_item.histogram, query_image_histogram)
+    for db_museum_item in db_museum_items:
+        distance = Distance(db_museum_item, query_museum_item)
         distance.calc_dist(method)
         distances.append(distance)
     return distances
