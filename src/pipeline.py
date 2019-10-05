@@ -4,6 +4,7 @@ from distance import Distance
 from export_manager import export_museum_item
 from museum_item import MuseumItem
 from image import Image
+from background_remover import BasicRemovingStrategy
 import pickle
 
 
@@ -169,3 +170,23 @@ def load_mask_images(query_folder):
             mask_images = Image(os.path.join(path, filename))
             mask_images.append(query_image)
     return mask_images
+
+def remove_background(images_with_background):
+    """
+    Removes the background from the input images
+    Args:
+        - images_with_background: images with background
+    Returns:
+        - the input images without background
+        - the used masks
+    """
+
+    images_without_background = []
+    masks = []
+
+    remover = BasicRemovingStrategy()
+
+    for image in images_with_background:
+        images_without_background.append(remover.remove_background(image, 10, 10))
+        masks.append(remover.mask)
+    return images_without_background, masks
