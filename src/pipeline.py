@@ -4,6 +4,7 @@ from distance import Distance
 from export_manager import export_museum_item
 from museum_item import MuseumItem
 from image import Image
+import pickle
 
 
 def load_bbdd_images():
@@ -136,3 +137,13 @@ def calc_similarty(db_museum_items, query_museum_item, method):
         distance.calc_dist(method)
         distances.append(distance)
     return distances
+
+def load_gt_corresps(query_folder):
+"""
+Loads the correspondances file of the query folder and returns the list of real correspondances
+"""
+    path = os.path.join(os.path.dirname(__file__),
+                        '../{}'.format(query_folder))
+    with open('gt_corresps.pkl', 'r') as f:
+        actual_corresps = pickle.load(f)
+    return actual_corresps
