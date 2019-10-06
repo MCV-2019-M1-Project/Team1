@@ -4,6 +4,7 @@ from pipeline import (
     calc_image_histogram,
     calc_similarty,
     apply_change_of_color_space,
+    calc_3d_histogram,
     load_gt_corresps
 )
 from import_manager import import_all_museum_items
@@ -19,8 +20,8 @@ def run(k=10):
     bbdd_museum_items = import_all_museum_items()
     gt_corresps = load_gt_corresps('qsd1_w1')
 
-    apply_change_of_color_space(query_images, 'GRAY')
-    query_histograms = calc_image_histogram(query_images, 0)
+    apply_change_of_color_space(query_images, 'LAB')
+    query_histograms = calc_3d_histogram(query_images)
     query_museum_items = []
     for image, histogram in zip(query_images, query_histograms):
         query_museum_item = MuseumItem(image, histogram)
@@ -28,7 +29,7 @@ def run(k=10):
 
     distances = []
     for query_museum_item in query_museum_items:
-        distance = calc_similarty(bbdd_museum_items, query_museum_item, 'euclidean')        
+        distance = calc_similarty(bbdd_museum_items, query_museum_item, 'correlation')        
         distances.append(distance)
 
     print('Score: ', global_mapk(gt_corresps, distances, k))

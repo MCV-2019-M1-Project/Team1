@@ -52,6 +52,7 @@ def apply_change_of_color_space(images, color_space):
             * HSV
             * LAB
             * GRAY
+            * YCrCb
     """
 
     for image in images:

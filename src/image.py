@@ -70,6 +70,7 @@ class Image(object):
                 * HSV
                 * LAB
                 * GRAY
+                * YCrCb
         """
 
         if self._color_space == 'BGR':
@@ -79,6 +80,8 @@ class Image(object):
                 self._img = cv2.cvtColor(self._img, cv2.COLOR_BGR2LAB)
             elif new_color_space == 'GRAY':
                 self._img = cv2.cvtColor(self._img, cv2.COLOR_BGR2GRAY)
+            elif new_color_space == 'YCrCb':                
+                self._img = cv2.cvtColor(self._img, cv2.COLOR_BGR2YCrCb)
             else:
                 raise NotImplementedError
 
@@ -103,6 +106,11 @@ class Image(object):
                 self._img = cv2.cvtColor(self._img, cv2.COLOR_GRAY2BGR)
             else:
                 raise NotImplementedError
+        elif self._color_space == 'YCrCb':
+            if new_color_space == 'BGR':
+                self._img = cv2.cvtColor(self._img, cv2.COLOR_YCrCb2BGR)
+            else:
+                raise NotImplementedError        
         else:
             raise NotImplementedError
 
@@ -138,7 +146,7 @@ class Image(object):
         Returns
             The historgram of the image a 256x1 array by default
         """
-
+        
         return cv2.calcHist([self._img], [channel], mask, hist_size, ranges)
 
     def calc_equalize_hist(self):
