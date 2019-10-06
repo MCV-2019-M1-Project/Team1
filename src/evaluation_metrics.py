@@ -8,7 +8,7 @@ def mapk(gt_corresps_list, predicted_list, k):
     Computes the mean average precision of an image for a k set of predictions
     Args:
         - gt_corresps: list of ground truth
-        - predicted_list: list of predicted 
+        - predicted_list: list of predicted
         - k: maximum number of predicted
     Returns:
         - mapk: mean average precision of the image for a k set of predictions
@@ -24,7 +24,7 @@ def global_mapk(gt_corresps_lists, predicted_lists, k):
     Computes the mean of the mean average precision of a list of images for a k set of predictions of each image
     Args:
         - gt_corresps_lists: list of lists of ground truth
-        - predicted_lists: list of lists of predicted 
+        - predicted_lists: list of lists of predicted
         - k: maximum number of predicted
     Returns:
         - mean_mapk: mean of the mean average precision of the images for a k predictions
@@ -51,8 +51,6 @@ def compute_image_comparision(image_ref, image_pred):
     tn = 0.0
     fp = 0.0
     fn = 0.0
-    print("REF ", image_ref.img.shape[0], image_ref.img.shape[1])
-    print("Pred ", image_pred.shape[0], image_pred.shape[1])
     for i in range(image_ref.img.shape[0]):
         for j in range(image_ref.img.shape[1]):
             if (image_ref.img[i][j][0] and image_pred[i][j]):

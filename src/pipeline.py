@@ -17,7 +17,7 @@ def load_bbdd_images():
 
     path = os.path.join(os.path.dirname(__file__), '../bbdd')
     images = []
-    for filename in os.listdir(path):
+    for filename in sorted(os.listdir(path)):
         image = Image(os.path.join(path, filename))
         images.append(image)
     return images
@@ -35,7 +35,7 @@ def load_query_images(query_folder):
     path = os.path.join(os.path.dirname(__file__),
                         '../{}'.format(query_folder))
     query_images = []
-    for filename in os.listdir(path):
+    for filename in sorted(os.listdir(path)):
         if Path(filename).suffix == '.jpg':
             query_image = Image(os.path.join(path, filename))
             query_images.append(query_image)
@@ -164,7 +164,7 @@ def load_mask_images(query_folder):
     path = os.path.join(os.path.dirname(__file__),
                         '../{}'.format(query_folder))
     mask_images = []
-    for filename in os.listdir(path):
+    for filename in sorted(os.listdir(path)):
         if Path(filename).suffix == '.png':
             mask_image = Image(os.path.join(path, filename))
             mask_images.append(mask_image)
@@ -191,7 +191,7 @@ def remove_background(images_with_background):
     return images_without_background, masks
 
 def calc_3d_histogram(images, hist_size=[256], ranges=[0, 256], mask=None):
-    
+
     histograms = []
     for image in images:
         red_histogram = image.calc_histogram(2, hist_size, ranges, mask)
