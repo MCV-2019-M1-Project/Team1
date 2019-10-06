@@ -14,49 +14,22 @@ from evaluation_metrics import (
     global_mapk
 )
 
-
-
-def run():
-    k = 10
+def run(k=10):
     query_images = load_query_images('qsd1_w1')
-    bbdd_images = load_bbdd_images()
-    actual_correspondances = load_gt_corresps('qsd1_w1')
+    bbdd_museum_items = import_all_museum_items()
+    gt_corresps = load_gt_corresps('qsd1_w1')
 
     apply_change_of_color_space(query_images, 'GRAY')
     query_histograms = calc_image_histogram(query_images, 0)
-    bbdd_histograms = calc_image_histogram(bbdd_images, 0)
     
     query_museum_items = []
     for image, histogram in zip(query_images, query_histograms):
         query_museum_item = MuseumItem(image, histogram)
         query_museum_items.append(query_museum_item)
-        
-    bbdd_museum_items = []
-    for image, histogram in zip(bbdd_images, bbdd_histograms):
-        bbdd_museum_item = MuseumItem(image, histogram)
-        bbdd_museum_items.append(bbdd_museum_item)
-        
-    k_retrieved = []    
-    for query_item in query_museum_items:                              
-        distances = calc_similarty(bbdd_museum_items, query_item, 'intersection')
-        k_retrieved = k_retrieval(distances, k)
-#        k_retrieved_names = [o.db_im.image.filename for o in k_retrieved]
-#        print(k_retrieved_names)
-        
-#    mapk_list = []
-#    for act_corresp in actual_correspondances:
-#        mapk_list.append(mapk(k, act_corresp, k_retrieved))
-#    mapk_mean = global_mapk(k, query_images, act_corresp, k_retrieved)
-#
-#    return k_retrieved, mapk_mean
 
+    distances = []
+    for query_museum_item in query_museum_items:
+        distance = calc_similarty(bbdd_museum_items, query_museum_item, 'euclidean')        
+        distances.append(distance)
 
-
-run()
-
-
-
-    
-    
-
-    
+    global_mapk(gt_corresps, distances, k)

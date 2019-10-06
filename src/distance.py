@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.spatial import distance
-import cv2
+from cv2 import cv2
 
 
 class Distance:

@@ -3,32 +3,36 @@ from k_retrieval import k_retrieval
 import numpy as np
 
 
-def mapk(corresps_list, retrieved_list, k):
+def mapk(gt_corresps_list, predicted_list, k):
     """
     Computes the mean average precision of an image for a k set of predictions
     Args:
-        - k: number of predictions
-        - image: image used to compute the k most similar images
+        - gt_corresps: list of ground truth
+        - predicted_list: list of predicted 
+        - k: maximum number of predicted
     Returns:
         - mapk: mean average precision of the image for a k set of predictions
     """
 
-    return metrics.mapk(corresps_list, retrieved_list, k)
+    k_retrieved_list = k_retrieval(predicted_list, k)
+    return metrics.mapk([gt_corresps_list], [k_retrieved_list], k)
 
 
-def global_mapk(k, images, corresps_list, retrieved_list):
+def global_mapk(gt_corresps_lists, predicted_lists, k):
     """
     Computes the mean of the mean average precision of a list of images for a k set of predictions of each image
     Args:
-        - k: number of predictions
-        - images: list of images used to compute the k most similar images
+        - gt_corresps_lists: list of lists of ground truth
+        - predicted_lists: list of lists of predicted 
+        - k: maximum number of predicted
     Returns:
         - mean_mapk: mean of the mean average precision of the images for a k predictions
     """
+
     mean_mapk = 0.0
-    for i in images:
-        mean_mapk += mapk(k,corresps_list, retrieved_list)
-    return mean_mapk / float(len(images))
+    for gt_corresps_list, predicted_list in zip(gt_corresps_lists, predicted_lists):
+        mean_mapk += mapk(gt_corresps_list, predicted_list, k)
+    return mean_mapk / float(len(gt_corresps_lists))
 
 
 def compute_image_comparision(image_ref, image_pred):
