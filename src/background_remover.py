@@ -34,8 +34,8 @@ class BasicRemovingStrategy(BackgroundRemoverBase):
         """
         def my_find_peaks(array, height_ratio, distance_between_peaks):
             peaks, _ = find_peaks(array,
-                                  height=np.max(array) / self.height_ratio,
-                                  distance=self.distance_between_peaks)
+                                  height=np.max(array) / height_ratio,
+                                  distance=distance_between_peaks)
             return peaks
 
         gray_image = cv2.cvtColor(image.img, cv2.COLOR_BGR2GRAY)
@@ -63,5 +63,8 @@ class BasicRemovingStrategy(BackgroundRemoverBase):
         self.mask = np.zeros(shape=(image.img.shape[0], image.img.shape[1]),
                              dtype=np.uint8)
         self.mask[top:bottom, left:right] = 255
-        cropped_image = image.img[top:bottom, left:right].copy()
+        
+        cropped_image = image
+        cropped_image.img = image.img[top:bottom, left:right].copy()
+
         return cropped_image

@@ -1,5 +1,5 @@
 from pathlib import Path
-import cv2
+from cv2 import cv2
 
 
 class Image(object):
@@ -20,6 +20,10 @@ class Image(object):
     def img(self):
         return self._img
 
+    @img.setter
+    def img(self, image):
+        self._img = image
+
     def set_img(self, filename):
         """
         Change the current image
@@ -34,6 +38,13 @@ class Image(object):
         self._color_space = 'BGR'
         self._filename = filename.split('/')[-1:][0][:-4]
         self._img = cv2.imread(filename)
+    
+    def image_name(self):
+        """
+        Returns the image name
+        """
+        return int(self._filename[5:])
+
 
     @property
     def filename(self):
@@ -62,28 +73,51 @@ class Image(object):
                 * BGR
                 * HSV
                 * LAB
+                * GRAY
+                * YCrCb
         """
-
-        if new_color_space not in ['BGR', 'HSV', 'LAB']:
-            raise ValueError(
-                'The change color space from {} to {} is not implemented yet'.
-                format(self._color_space, new_color_space))
 
         if self._color_space == 'BGR':
             if new_color_space == 'HSV':
                 self._img = cv2.cvtColor(self._img, cv2.COLOR_BGR2HSV)
             elif new_color_space == 'LAB':
                 self._img = cv2.cvtColor(self._img, cv2.COLOR_BGR2LAB)
+            elif new_color_space == 'GRAY':
+                self._img = cv2.cvtColor(self._img, cv2.COLOR_BGR2GRAY)
+            elif new_color_space == 'YCrCb':                
+                self._img = cv2.cvtColor(self._img, cv2.COLOR_BGR2YCrCb)
+            else:
+                raise NotImplementedError
+
         elif self._color_space == 'HSV':
             if new_color_space == 'BGR':
                 self._img = cv2.cvtColor(self._img, cv2.COLOR_HSV2BGR)
             elif new_color_space == 'LAB':
                 self._img = cv2.cvtColor(self._img, cv2.COLOR_HSV2LAB)
+            else:
+                raise NotImplementedError
+
         elif self._color_space == 'LAB':
             if new_color_space == 'HSV':
                 self._img = cv2.cvtColor(self._img, cv2.COLOR_LAB2HSV)
             elif new_color_space == 'BGR':
                 self._img = cv2.cvtColor(self._img, cv2.COLOR_LAB2BGR)
+            else:
+                raise NotImplementedError
+
+        elif self._color_space == 'GRAY':
+            if new_color_space == 'BGR':
+                self._img = cv2.cvtColor(self._img, cv2.COLOR_GRAY2BGR)
+            else:
+                raise NotImplementedError
+        elif self._color_space == 'YCrCb':
+            if new_color_space == 'BGR':
+                self._img = cv2.cvtColor(self._img, cv2.COLOR_YCrCb2BGR)
+            else:
+                raise NotImplementedError        
+        else:
+            raise NotImplementedError
+
         self._color_space = new_color_space
 
     def image_filtering(self, ddepth, kernel):
@@ -116,7 +150,7 @@ class Image(object):
         Returns
             The historgram of the image a 256x1 array by default
         """
-
+        
         return cv2.calcHist([self._img], [channel], mask, hist_size, ranges)
 
     def calc_equalize_hist(self):
@@ -127,5 +161,9 @@ class Image(object):
         if self._color_space != 'BGR':
             raise ValueError(
                 'Error: the implicit image must be on BGR color space')
-        im = cv2.cvtColor(self._img, cv2.COLOR_BGR2GRAY)
+        if self._color_space != 'GRAY':
+            im = cv2.cvtColor(self._img, cv2.COLOR_BGR2GRAY)
+        else:
+            im = self._img
+
         return cv2.equalizeHist(im)

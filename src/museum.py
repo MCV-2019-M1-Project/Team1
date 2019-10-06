@@ -1,22 +1,18 @@
-from image import Image
-from export_manager import export_museum_item
-from import_manager import import_museum_item
-from museum_item import MuseumItem
-import cv2
+from pipeline_qsd1_w1_offline import run as run_offline_pipeline
+from pipeline_qsd1_w1 import run as run_qsd1_pipeline
+from pipeline_qsd2_w1 import run as run_qsd2_pipeline
+import pickle
+from pathlib import Path
+import os
 
-# Testing the image class
-img = Image('bbdd/bbdd_00000.jpg')
-print('Img filename', img.filename)
-print('Img color space', img.color_space)
-print('Img the img itself', img.img)
-print('Get the basic hist', img.calc_histogram(0))
-print('Get the equalized hist', img.calc_equalize_hist())
-print('change to HSV color space')
-img.color_space = 'HSV'
-print('Img color space', img.color_space)
+run_offline_pipeline()
+result_qsd1 = run_qsd1_pipeline()
+print(result_qsd1)
+path = os.path.join(os.path.dirname(__file__), '../week1/QST1/method1')
+with open('{}/result.pkl'.format(path), 'wb') as f:
+    pickle.dump(result_qsd1, f)
 
-museum_item = MuseumItem(img)
-export_museum_item(museum_item)
-
-museum_item = import_museum_item(img.filename)
-print('Img filename restored', museum_item.image.filename)
+result_qsd2 = run_qsd2_pipeline()
+path = os.path.join(os.path.dirname(__file__), '../week1/QST2/method1')
+with open('{}/result.pkl'.format(path), 'wb') as f:
+    pickle.dump(result_qsd2, f)
