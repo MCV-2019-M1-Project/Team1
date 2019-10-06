@@ -191,6 +191,7 @@ def remove_background(images_with_background):
     return images_without_background, masks
 
 def calc_3d_histogram(images, hist_size=[256], ranges=[0, 256], mask=None):
+    
     histograms = []
     for image in images:
         red_histogram = image.calc_histogram(2, hist_size, ranges, mask)
