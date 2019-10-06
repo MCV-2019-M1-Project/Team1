@@ -20,6 +20,10 @@ class Image(object):
     def img(self):
         return self._img
 
+    @img.setter
+    def img(self, image):
+        self._img = image
+
     def set_img(self, filename):
         """
         Change the current image

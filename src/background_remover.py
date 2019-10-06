@@ -63,5 +63,8 @@ class BasicRemovingStrategy(BackgroundRemoverBase):
         self.mask = np.zeros(shape=(image.img.shape[0], image.img.shape[1]),
                              dtype=np.uint8)
         self.mask[top:bottom, left:right] = 255
-        cropped_image = image.img[top:bottom, left:right].copy()
+        
+        cropped_image = image
+        cropped_image.img = image.img[top:bottom, left:right].copy()
+
         return cropped_image

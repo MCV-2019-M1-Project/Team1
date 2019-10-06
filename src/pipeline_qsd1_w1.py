@@ -20,7 +20,7 @@ def run(k=10):
     bbdd_museum_items = import_all_museum_items()
     gt_corresps = load_gt_corresps('qsd1_w1')
 
-    apply_change_of_color_space(query_images, 'LAB')
+    apply_change_of_color_space(query_images, 'YCrCb')
     query_histograms = calc_3d_histogram(query_images)
     query_museum_items = []
     for image, histogram in zip(query_images, query_histograms):
@@ -29,7 +29,7 @@ def run(k=10):
 
     distances = []
     for query_museum_item in query_museum_items:
-        distance = calc_similarty(bbdd_museum_items, query_museum_item, 'correlation')        
+        distance = calc_similarty(bbdd_museum_items, query_museum_item, 'hellinger')        
         distances.append(distance)
 
     print('Score: ', global_mapk(gt_corresps, distances, k))

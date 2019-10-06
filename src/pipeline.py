@@ -6,6 +6,7 @@ from museum_item import MuseumItem
 from image import Image
 from background_remover import BasicRemovingStrategy
 import pickle
+from cv2 import cv2
 
 
 def load_bbdd_images():
@@ -191,7 +192,7 @@ def remove_background_and_store(images_with_background, folder):
     for image in images_with_background:
         images_without_background.append(remover.remove_background(image, 10, 10))
         masks.append(remover.mask)
-        filename = image.filename + '.png';
+        filename = image.filename + '.png'
         filename = os.path.join(path, filename)
         remover.store_mask(filename)
     return images_without_background, masks
@@ -201,8 +202,14 @@ def calc_3d_histogram(images, hist_size=[256], ranges=[0, 256], mask=None):
     histograms = []
     for image in images:
         red_histogram = image.calc_histogram(2, hist_size, ranges, mask)
+        cv2.normalize(red_histogram, red_histogram, norm_type=cv2.NORM_MINMAX)
+
         green_histogram = image.calc_histogram(1, hist_size, ranges, mask)
+        cv2.normalize(green_histogram, green_histogram, norm_type=cv2.NORM_MINMAX)
+
         blue_histogram = image.calc_histogram(0, hist_size, ranges, mask)
+        cv2.normalize(blue_histogram, blue_histogram, norm_type=cv2.NORM_MINMAX)
+
         histogram = red_histogram + green_histogram + blue_histogram
         histograms.append(histogram)
     return histograms

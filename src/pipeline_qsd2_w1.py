@@ -5,25 +5,27 @@ from pipeline import (
     apply_change_of_color_space,
     load_mask_images,
     remove_background_and_store,
-    load_gt_corresps
+    load_gt_corresps,
+    calc_3d_histogram
 )
 from import_manager import import_all_museum_items
+from image import Image
 from museum_item import MuseumItem
 from k_retrieval import k_retrieval
-from evaluation_metrics import global_compute_image_comparision
+from evaluation_metrics import global_compute_image_comparision, global_mapk
 
 def run(k=10):
     #Load items
     query_images = load_query_images('qsd2_w1')
     bbdd_museum_items = import_all_museum_items()
-    actual_correspondances = load_gt_corresps('qsd2_w1')
+    gt_corresps = load_gt_corresps('qsd2_w1')
     mask_images = load_mask_images('qsd2_w1')
 
     #Remove backgound
-    images_without_background, predicted_masks = remove_background_and_store(query_images, 'output')
-
+    images_without_background, predicted_masks = remove_background_and_store(query_images, 'week1/QST2/method1/')
+    
     #Compare images to museum item and obtain metrics
-    apply_change_of_color_space(images_without_background, 'LAB')
+    apply_change_of_color_space(images_without_background, 'YCrCb')
     query_histograms = calc_3d_histogram(images_without_background)
     query_museum_items = []
     for image, histogram in zip(images_without_background, query_histograms):
@@ -32,7 +34,7 @@ def run(k=10):
 
     distances = []
     for query_museum_item in query_museum_items:
-        distance = calc_similarty(bbdd_museum_items, query_museum_item, 'correlation')
+        distance = calc_similarty(bbdd_museum_items, query_museum_item, 'hellinger')
         distances.append(distance)
 
     print('Score: ', global_mapk(gt_corresps, distances, k))
@@ -57,5 +59,3 @@ def run(k=10):
     print("f1 score = ", f1)
 
     return output
-
-run()
