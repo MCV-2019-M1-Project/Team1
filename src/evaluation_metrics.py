@@ -3,7 +3,7 @@ from k_retrieval import k_retrieval
 import numpy as np
 
 
-def mapk(k, corresps_list, retrieved_list):
+def mapk(corresps_list, retrieved_list, k):
     """
     Computes the mean average precision of an image for a k set of predictions
     Args:
@@ -12,9 +12,8 @@ def mapk(k, corresps_list, retrieved_list):
     Returns:
         - mapk: mean average precision of the image for a k set of predictions
     """
-    actual = corresps_list
-    predicted = retrieved_list
-    return metrics.mapk(k, actual, predicted)
+
+    return metrics.mapk(corresps_list, retrieved_list, k)
 
 
 def global_mapk(k, images, corresps_list, retrieved_list):
