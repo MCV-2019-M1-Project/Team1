@@ -32,4 +32,19 @@ def run(k=10):
         distance = calc_similarty(bbdd_museum_items, query_museum_item, 'euclidean')        
         distances.append(distance)
 
-    global_mapk(gt_corresps, distances, k)
+    print('Score: ', global_mapk(gt_corresps, distances, k))
+
+    output = []
+    for distance in distances:
+        k_distances = (k_retrieval(distance, k))
+        output_list = []
+        for k_distance in k_distances:
+            output_list.append(k_distance.db_im.image.filename)
+        output.append(output_list)
+
+    # Print results
+    for gt_corresp, predicted in zip(gt_corresps, output):
+        print('Solution (GT): ', gt_corresp)
+        print('Predicted: ', predicted)
+
+    return output
