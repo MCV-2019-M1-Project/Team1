@@ -189,3 +189,13 @@ def remove_background(images_with_background):
         images_without_background.append(remover.remove_background(image, 10, 10))
         masks.append(remover.mask)
     return images_without_background, masks
+
+def calc_3d_histogram(images, hist_size=[256], ranges=[0, 256], mask=None):
+    histograms = []
+    for image in images:
+        red_histogram = image.calc_histogram(2, hist_size, ranges, mask)
+        green_histogram = image.calc_histogram(1, hist_size, ranges, mask)
+        blue_histogram = image.calc_histogram(0, hist_size, ranges, mask)
+        histogram = red_histogram + green_histogram + blue_histogram
+        histograms.append(histogram)
+    return histograms

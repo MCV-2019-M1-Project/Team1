@@ -2,7 +2,6 @@ import numpy as np
 from scipy.spatial import distance
 from cv2 import cv2
 
-
 class Distance:
     def __init__(self, query_museum_item, db_museum_item):
         self._query_museum_item = query_museum_item
