@@ -4,7 +4,7 @@ from pipeline import (
     calc_similarty,
     apply_change_of_color_space,
     load_mask_images,
-    remove_background,
+    remove_background_and_store,
     load_gt_corresps
 )
 from import_manager import import_all_museum_items
@@ -20,7 +20,7 @@ def run():
     mask_images = load_mask_images('qsd2_w1')
 
     #Remove backgound
-    images_without_background, predicted_masks = remove_background(query_images)
+    images_without_background, predicted_masks = remove_background_and_store(query_images, 'output')
 
     #TODO: pipeline equal to qsd1 but with images_without_background
 

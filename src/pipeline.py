@@ -171,9 +171,9 @@ def load_mask_images(query_folder):
             mask_images.append(mask_image)
     return mask_images
 
-def remove_background(images_with_background):
+def remove_background_and_store(images_with_background, folder):
     """
-    Removes the background from the input images
+    Removes the background from the input images and stores the mask of the background
     Args:
         - images_with_background: images with background
     Returns:
@@ -186,9 +186,14 @@ def remove_background(images_with_background):
 
     remover = BasicRemovingStrategy()
 
+    path = os.path.join(os.path.dirname(__file__), '../{}'.format(folder))
+
     for image in images_with_background:
         images_without_background.append(remover.remove_background(image, 10, 10))
         masks.append(remover.mask)
+        filename = image.filename + '.png';
+        filename = os.path.join(path, filename)
+        remover.store_mask(filename)
     return images_without_background, masks
 
 def calc_3d_histogram(images, hist_size=[256], ranges=[0, 256], mask=None):
