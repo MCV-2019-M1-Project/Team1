@@ -21,7 +21,6 @@ def run(k=10):
 
     apply_change_of_color_space(query_images, 'GRAY')
     query_histograms = calc_image_histogram(query_images, 0)
-    
     query_museum_items = []
     for image, histogram in zip(query_images, query_histograms):
         query_museum_item = MuseumItem(image, histogram)
@@ -39,7 +38,7 @@ def run(k=10):
         k_distances = (k_retrieval(distance, k))
         output_list = []
         for k_distance in k_distances:
-            output_list.append(k_distance.db_im.image.filename)
+            output_list.append(k_distance.db_im.image.image_name())
         output.append(output_list)
 
     # Print results

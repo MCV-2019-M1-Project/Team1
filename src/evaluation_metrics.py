@@ -15,6 +15,7 @@ def mapk(gt_corresps_list, predicted_list, k):
     """
 
     k_retrieved_list = k_retrieval(predicted_list, k)
+    k_retrieved_list = [k.db_im.image.image_name() for k in k_retrieved_list]
     return metrics.mapk([gt_corresps_list], [k_retrieved_list], k)
 
 

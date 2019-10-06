@@ -1,5 +1,5 @@
 from pathlib import Path
-import cv2
+from cv2 import cv2
 
 
 class Image(object):
@@ -34,6 +34,13 @@ class Image(object):
         self._color_space = 'BGR'
         self._filename = filename.split('/')[-1:][0][:-4]
         self._img = cv2.imread(filename)
+    
+    def image_name(self):
+        """
+        Returns the image name
+        """
+        return int(self._filename[5:])
+
 
     @property
     def filename(self):
