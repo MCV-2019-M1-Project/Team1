@@ -134,9 +134,8 @@ def calc_similarty(db_museum_items, query_museum_item, method):
 
     distances = []
     for db_museum_item in db_museum_items:
-        distance = Distance(db_museum_item, query_museum_item)
+        distance = Distance(query_museum_item, db_museum_item)
         distance.calc_dist(method)
-        print(distance.distance)
         distances.append(distance)
     return distances
 

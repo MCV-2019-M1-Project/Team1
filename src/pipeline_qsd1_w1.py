@@ -35,16 +35,20 @@ def run():
     for image, histogram in zip(bbdd_images, bbdd_histograms):
         bbdd_museum_item = MuseumItem(image, histogram)
         bbdd_museum_items.append(bbdd_museum_item)
-                                  
-    distances = calc_similarty(bbdd_museum_items, query_museum_item, 'correlation')
-    k_retrieved = k_retrieval(distances, k)
-
-    mapk_list = []
-    for act_corresp in actual_correspondances:
-        mapk_list.append(mapk(k, act_corresp, k_retrieved))
-    mapk_mean = global_mapk(k, query_images, act_corresp, k_retrieved)
-
-    return k_retrieved, mapk_mean
+        
+    k_retrieved = []    
+    for query_item in query_museum_items:                              
+        distances = calc_similarty(bbdd_museum_items, query_item, 'intersection')
+        k_retrieved = k_retrieval(distances, k)
+#        k_retrieved_names = [o.db_im.image.filename for o in k_retrieved]
+#        print(k_retrieved_names)
+        
+#    mapk_list = []
+#    for act_corresp in actual_correspondances:
+#        mapk_list.append(mapk(k, act_corresp, k_retrieved))
+#    mapk_mean = global_mapk(k, query_images, act_corresp, k_retrieved)
+#
+#    return k_retrieved, mapk_mean
 
 
 
