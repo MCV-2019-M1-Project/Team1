@@ -54,7 +54,7 @@ class Distance:
         elif similarity_method == "x2_dist":
             self._method = "x2_dist"
             self._distance = np.sum(
-                (query_hist - db_hist)**2 / (query_hist - db_hist + 1e-6))
+                (query_hist - db_hist)**2 / (query_hist + db_hist + 1e-6))
             self._maximization = False
 
         elif similarity_method == "intersection":
