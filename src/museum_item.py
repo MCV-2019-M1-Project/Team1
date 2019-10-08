@@ -1,26 +1,26 @@
-from image import Image
+from painting import Painting
 
 
 class MuseumItem(object):
-    def __init__(self, image=None, histogram=None):
+    def __init__(self, painting=None, histogram=None):
         """
-        Creates a new Museum Item with or not an image and histogram
+        Creates a new Museum Item with or not an painting and histogram
         Args:
-            - image: a image object instnace
-            - histogram: the histogram associated to that image
+            - painting: a painting object instnace
+            - histogram: the histogram associated to that painting
         """
 
-        self.image = image
-        self.histogram = histogram
+        self._painting = painting
+        self._histogram = histogram
 
     @property
-    def image(self):
+    def painting(self):
         """
         Returns:
-            the stored image instance
+            the stored painting instance
         """
 
-        return self._image
+        return self._painting
 
     @property
     def histogram(self):
@@ -32,14 +32,14 @@ class MuseumItem(object):
         return self._histogram
 
     @image.setter
-    def image(self, image):
+    def image(self, painting):
         """
-        Set a new image
+        Set a new painting
         Args:
-            - image: a new image object instance
+            - image: a new painting object instance
         """
 
-        self._image = image
+        self._painting = painting
 
     @histogram.setter
     def histogram(self, histogram):
