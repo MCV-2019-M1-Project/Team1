@@ -1,4 +1,5 @@
 from pathlib import Path
+from museum_item import MuseumItem
 import os
 import pickle
 
