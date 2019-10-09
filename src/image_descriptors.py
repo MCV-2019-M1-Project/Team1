@@ -1,5 +1,7 @@
 from painting import Painting
 from cv2 import cv2
+import numpy as np
+
 
 def calc_equalize_hist(self, painting):
     """
@@ -46,5 +48,28 @@ def calc_histogram(painting, channel, hist_size=[256], ranges=[0, 256], mask=Non
     Returns
         The historgram of the image a 256x1 array by default
     """
-    
+
     return cv2.calcHist([painting.img], [channel], mask, hist_size, ranges)
+
+def calc_histogram_1D_luminance_and_2D_chrominance(painting):
+    """
+    Calculates the normalized 1D histogram of the iluminance and concatenates it with the normalized 2D histogram of the chrominance
+    Args:
+        - painting: a painting instance object
+    Returns
+        The 1D histogram of the iluminance concatenated with the 2D histogram of the chrominance
+    """
+    #Convert to hsv color space
+    painting.color_space = 'YCrCb'
+    #Compute histogram 2D
+    hist2D =calc_histogram(painting, [1,2], [256, 256], [0, 256, 0, 256], None)
+    #Normalize histogram 2D
+    hist2D_norm = cv2.normalize(hist2D, 0.0, 1.0)
+    #Flatten 2D histogram
+    hist2D_flatten = hist2D_norm.flatten()
+    #Compute histogram 1D
+    hist1D =calc_histogram(painting, [0], [256], [0, 256], None)
+    #Normalize histogram 1D
+    hist1D_norm = cv2.normalize(hist1D, 0.0, 1.0)
+    #Join and return features
+    return np.append(hist2D_flatten, hist1D_norm)
