@@ -1,53 +1,62 @@
 from pathlib import Path
 import os
-from distance import Distance
-from export_manager import export_museum_item
+from painting import Painting
 from museum_item import MuseumItem
-from image import Image
-from background_remover import BasicRemovingStrategy
+from export_manager import export_museum_item
+from distance import (euclidean, hellinger, intersection, l1_dist, x2_dist, correlation)
 import pickle
 from cv2 import cv2
 
-
-def load_bbdd_images():
+def k_retrieval(list, k, reverse=False):
     """
-    Load all the images stored on the bbdd folder
+    Args:
+        - list: list of integers
+        - k: how many elements retrieve
+    Returns
+        The K lowest values from that list
+    """
+
+    return list.sort(reverse=reverse)[0:k + 1]
+
+def load_bbdd_paitings():
+    """
+    Load all the paintings stored on the bbdd folder
     Returns:
-        A list of Image object instances
+        A list of Painting object instances
     """
 
     path = os.path.join(os.path.dirname(__file__), '../bbdd')
-    images = []
+    paintings = []
     for filename in sorted(os.listdir(path)):
-        image = Image(os.path.join(path, filename))
-        images.append(image)
-    return images
+        painting = Painting(os.path.join(path, filename))
+        paintings.append(painting)
+    return paintings
 
 
-def load_query_images(query_folder):
+def load_query_paintings(query_folder):
     """
-    Loads all the query images stored on the query folder
+    Loads all the query paintings stored on the query folder
     Args:
         - query_folder: specifies the query_folder name
     Returns:
-        A list of Image instnaces
+        A list of Painting instnaces
     """
 
     path = os.path.join(os.path.dirname(__file__),
                         '../{}'.format(query_folder))
-    query_images = []
+    query_paintings = []
     for filename in sorted(os.listdir(path)):
         if Path(filename).suffix == '.jpg':
-            query_image = Image(os.path.join(path, filename))
-            query_images.append(query_image)
-    return query_images
+            query_painting = Painting(os.path.join(path, filename))
+            query_paintings.append(query_painting)
+    return query_paintings
 
 
-def apply_change_of_color_space(images, color_space):
+def apply_change_of_color_space(paintings, color_space):
     """
-    Apply to all images a color space change
+    Apply to all paintings a color space change
     Args:
-        - images: a list of Image object instances
+        - paintings: a list of Painting object instances
         - color_space: the color space to change could be
             * BGR
             * HSV
@@ -56,8 +65,8 @@ def apply_change_of_color_space(images, color_space):
             * YCrCb
     """
 
-    for image in images:
-        image.color_space = color_space
+    for painting in paintings:
+        painting.color_space = color_space
 
 
 def calc_image_histogram(images,
@@ -88,22 +97,6 @@ def calc_image_histogram(images,
     return histograms
 
 
-def calc_image_equalize_hist(images):
-    """
-    Do an image processing of contrast adjustment using the image's histogram
-    Args:
-        - images: a list of Image object instances
-    Returns:
-        A list of equalized histograms based on the given images
-    """
-
-    equalize_histograms = []
-    for image in images:
-        equalize_histogram = image.calc_equalize_hist()
-        equalize_histograms.append(equalize_histogram)
-    return equalize_histograms
-
-
 def export(images, histograms):
     """
     Exports the images and histograms into data folder as museum items
@@ -117,7 +110,7 @@ def export(images, histograms):
         export_museum_item(museum_item)
 
 
-def calc_similarty(db_museum_items, query_museum_item, method):
+def calc_similarties(db_museum_items, query_museum_item, method):
     """
     Calc the similarity of all museum items against the query image histogram
     Args:
@@ -136,9 +129,20 @@ def calc_similarty(db_museum_items, query_museum_item, method):
 
     distances = []
     for db_museum_item in db_museum_items:
-        distance = Distance(query_museum_item, db_museum_item)
-        distance.calc_dist(method)
-        distances.append(distance)
+        if method == 'euclidean':
+            distances.append(euclidean(db_museum_item.histogram, query_museum_item.histogram))
+        elif method == 'L1_dist':
+            distances.append(l1_dist(db_museum_item.histogram, query_museum_item.histogram))
+        elif method == 'x2_dist':
+            distances.append(x2_dist(db_museum_item.histogram, query_museum_item.histogram))
+        elif method == 'intersection':
+            distances.append(intersection(db_museum_item.histogram, query_museum_item.histogram))
+        elif method == 'hellinger':
+            distances.append(hellinger(db_museum_item.histogram, query_museum_item.histogram))
+        elif method == 'correlation':
+            distances.append(correlation(db_museum_item.histogram, query_museum_item.histogram))
+        else:
+            raise NotImplementedError
     return distances
 
 
@@ -165,23 +169,16 @@ def load_mask_images(query_folder):
 
     path = os.path.join(os.path.dirname(__file__),
                         '../{}'.format(query_folder))
-    mask_images = []
+    mask_paintings = []
     for filename in sorted(os.listdir(path)):
         if Path(filename).suffix == '.png':
-            mask_image = Image(os.path.join(path, filename))
-            mask_images.append(mask_image)
-    return mask_images
+            mask_painting = Painting(os.path.join(path, filename))
+            mask_paintings.append(mask_painting)
+    return mask_paintings
 
+"""
+TODO: USe the new background remover
 def remove_background_and_store(images_with_background, folder):
-    """
-    Removes the background from the input images and stores the mask of the background
-    Args:
-        - images_with_background: images with background
-    Returns:
-        - the input images without background
-        - the used masks
-    """
-
     images_without_background = []
     masks = []
 
@@ -196,7 +193,10 @@ def remove_background_and_store(images_with_background, folder):
         filename = os.path.join(path, filename)
         remover.store_mask(filename)
     return images_without_background, masks
+"""
 
+"""
+TODO: Check again the 3D Histo
 def calc_3d_histogram(images, hist_size=[256], ranges=[0, 256], mask=None):
 
     histograms = []
@@ -213,3 +213,4 @@ def calc_3d_histogram(images, hist_size=[256], ranges=[0, 256], mask=None):
         histogram = red_histogram + green_histogram + blue_histogram
         histograms.append(histogram)
     return histograms
+"""
