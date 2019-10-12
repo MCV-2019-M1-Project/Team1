@@ -22,7 +22,7 @@ def erase_overlapped_regions(rects):
                 #x2 contains x1
                 ext_rects.remove(rects[i])
             else:
-                if x2>x1 and x2-x1-w1<15:
+                if x2>x1 and x2-x1-w1<15 and -15<y1-y2<15:
                     #boxes are very near or overlapped
                     x3=x1
                     y3=y1
@@ -32,7 +32,7 @@ def erase_overlapped_regions(rects):
                     ext_rects.remove(rects[j])
                     new_rect = (x3, y3, w3, h3)
                     ext_rects.append(new_rect)
-                elif x1>x2 and x1-x2-w2<15:
+                elif x1>x2 and x1-x2-w2<15 and -15<y1-y2<15:
                     #boxes are very near or overlapped
                     x3=x2
                     y3=y1
@@ -95,7 +95,7 @@ def detect_text_box(gray_im, plot_results):
         rect_area = w*h
         ratio = h/w
 
-        if w >= 60 and w*0.60 > h and 0.0015*im_area<rect_area<0.20*im_area and ratio>0.08 and h>60:
+        if w >= 60 and w*0.60 > h and 0.0030*im_area<rect_area<0.20*im_area and ratio>0.08 and h>60:
             """
              if w and h aren't too small,
                 area of the rectangle isn't too small or big respect the image area
@@ -106,17 +106,25 @@ def detect_text_box(gray_im, plot_results):
             rects.append(rect)
 
     no_overlapped_rects = erase_overlapped_regions(rects)
-            
-        
+    detected_rects = []        
+    list_dilation = [] 
+    
     for rectangle in no_overlapped_rects:
         x, y, w, h = rectangle
-        cv2.rectangle(im_rgb, (x, y), (x+w, y+h), (255, 0, 0), 5);
-            
+        # List of rectangles to return the coordinates as required (tlx, tly, brx, bry)
+        det_rect = (x, y, x+w, y+h)
+        detected_rects.append(det_rect)
+        list_dilation.append(sum(sum(dilation[y:(y+h) , x:x+w]))) 
+        
+    max_dilation_rect=max(list_dilation)
+    text_rect = detected_rects[list_dilation.index(max_dilation_rect)]
+    cv2.rectangle(im_rgb, (text_rect[0], text_rect[1]), (text_rect[2], text_rect[3]), (255, 0, 0), 5)
+      
     if plot_results:
         fig= plt.figure(figsize=(11,15))
         plt.imshow(im_rgb)
 
-    return no_overlapped_rects
+    return detected_rects
     
 # path = 'D:\\Users\\USUARIO\\Documents\\M1.IntroductionToHumanAndVC\\M1.P2\\qsd1_w2\\00005.jpg'
 # image = cv2.imread(path)
