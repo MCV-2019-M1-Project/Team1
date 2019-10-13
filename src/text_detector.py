@@ -2,48 +2,87 @@ import  cv2
 import matplotlib.pyplot as plt
 from skimage.morphology import square
 import skimage.segmentation
+import itertools
 
-def erase_overlapped_regions(rects):
+def remove_overlapped(over_Rects, extt_rects, ind1, ind2):
+        """
+        Remove the rectangles that are overlapped and append a new rectangle that contains both
+        """
+        x1, y1, w1, h1 = extt_rects[ind1]
+        x2, y2, w2, h2 = over_Rects
+        x3=min(x1,x2)
+        y3=min(y1,y2)
+        w3=max(x2+w2-x1, x1+w1-x2) 
+        h3=max(h1,h2)
+        elem1=extt_rects[ind1]
+        elem2=extt_rects[ind2]
+        extt_rects.remove(elem1)
+        extt_rects.remove(elem2)
+        new_rect = (x3, y3, w3, h3)
+        extt_rects.append(new_rect)
+        
+        return extt_rects
+    
+def erase_inside_regions(rects):
     """ 
-    Remove the overlapped rectangles and merge the ones that are very near
+    Remove the rectangles contained in others
     """
     num_rects = len(rects)-1
     ext_rects = rects[:]
-    for i in range(num_rects):
-        for j in range(i+1, len(rects)):
-            
+    contains = []
+    for i in range(num_rects+1):
+        contains[:] = []
+        for j in range(num_rects+1):
             x1, y1, w1, h1 = rects[i]
             x2, y2, w2, h2 = rects[j]
             
-            if x2 > x1 and x2 < x1+w1 and y2 > y1 and y2 < y1+h1:
-                #x1 contains x2
-                ext_rects.remove(rects[j])
-            elif x1 > x2 and x1 < x2+w2 and y1 > y2 and y1 < y2+h2:
-                #x2 contains x1
-                ext_rects.remove(rects[i])
+            if (x2 > x1 and x2+w2 < x1+w1 and y2 > y1 and y2+h2 < y1+h1):
+                #x1 contains x1
+
+                contains.append(1)
+               
             else:
-                if x2>x1 and x2-x1-w1<15 and -15<y1-y2<15:
-                    #boxes are very near or overlapped
-                    x3=x1
-                    y3=y1
-                    w3=x2+w2-x1
-                    h3=h1
-                    ext_rects.remove(rects[i])
-                    ext_rects.remove(rects[j])
-                    new_rect = (x3, y3, w3, h3)
-                    ext_rects.append(new_rect)
-                elif x1>x2 and x1-x2-w2<15 and -15<y1-y2<15:
-                    #boxes are very near or overlapped
-                    x3=x2
-                    y3=y1
-                    w3=x1+w1-x2
-                    h3=h1
-                    ext_rects.remove(rects[i])
-                    ext_rects.remove(rects[j])
-                    new_rect = (x3, y3, w3, h3)
-                    ext_rects.append(new_rect)
-                else:
-                    pass
+                contains.append(-1)
+
+
+        contained_list =[item == -1 for item in contains]
+        ext_rects = list(itertools.compress(ext_rects, contained_list))
+        return ext_rects
+    
+def erase_overlapped_regions(rects, im_w, im_h):
+    
+    """ 
+    Remove the overlapped rectangles and merge the ones that are very near
+    """
+
+    index_list=[]
+    ext_rects = rects[:]
+    overlapped = []
+    for i in ext_rects:
+        overlapped[:] = []
+        for j in ext_rects:
+            x1, y1, w1, h1 = i
+            x2, y2, w2, h2 = j
+            
+            if x1>x2 and abs(x1-x2-w2)<0.005*im_w and -0.005*im_w<y1-y2<0.005*im_h:
+                overlapped.append(ext_rects.index(j))
+            else:
+                overlapped.append(-1)
+                
+        index_list[:]=[]
+              
+        overlapped_list = [item != -1 for item in overlapped]
+        elem_overlapped = list(itertools.compress(ext_rects, overlapped_list))   
+        for el in overlapped:
+            if el != -1:
+                index_list.append(el)
+            else:
+                pass
+        for it in range(len(elem_overlapped)):
+            ext_rects = remove_overlapped(elem_overlapped[it], ext_rects, ext_rects.index(i), index_list[it])
+
+        
+        
     return ext_rects
 
 def detect_text_box(gray_im, plot_results):
@@ -80,6 +119,7 @@ def detect_text_box(gray_im, plot_results):
     
     #dilation of the binarized image to reduce black areas
     dilation = cv2.dilate(th3, S3,2)
+    
 
     #find contours of the connected components in the binarized image
     im2, contours, hierarchy = cv2.findContours(dilation,cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
@@ -93,9 +133,8 @@ def detect_text_box(gray_im, plot_results):
 
         x, y, w, h = cv2.boundingRect(c)
         rect_area = w*h
-        ratio = h/w
 
-        if w >= 60 and w*0.60 > h and 0.0030*im_area<rect_area<0.20*im_area and ratio>0.08 and h>60:
+        if w >= 0.02*im_x and w*0.50 > h and h>=0.02*im_y and 0.0020*im_area<rect_area<0.20*im_area:
             """
              if w and h aren't too small,
                 area of the rectangle isn't too small or big respect the image area
@@ -104,30 +143,30 @@ def detect_text_box(gray_im, plot_results):
              """
             rect = (x, y, w, h)
             rects.append(rect)
+       
 
-    no_overlapped_rects = erase_overlapped_regions(rects)
+
+    outside_rects = erase_inside_regions(rects)
+    no_overlapped_rects = erase_overlapped_regions(outside_rects, im_x, im_y)
+
     detected_rects = []        
     list_dilation = [] 
     
+
+
     for rectangle in no_overlapped_rects:
         x, y, w, h = rectangle
         # List of rectangles to return the coordinates as required (tlx, tly, brx, bry)
         det_rect = (x, y, x+w, y+h)
         detected_rects.append(det_rect)
         list_dilation.append(sum(sum(dilation[y:(y+h) , x:x+w]))) 
-        
+    #take the rectangle with biggest values inside    
     max_dilation_rect=max(list_dilation)
     text_rect = detected_rects[list_dilation.index(max_dilation_rect)]
     cv2.rectangle(im_rgb, (text_rect[0], text_rect[1]), (text_rect[2], text_rect[3]), (255, 0, 0), 5)
       
     if plot_results:
         fig= plt.figure(figsize=(11,15))
-        plt.imshow(im_rgb)
+        plt.imshow(im_rgb)  
 
     return detected_rects
-    
-# path = 'D:\\Users\\USUARIO\\Documents\\M1.IntroductionToHumanAndVC\\M1.P2\\qsd1_w2\\00005.jpg'
-# image = cv2.imread(path)
-# gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-# rectangle_box = detect_text_box(gray, True)
