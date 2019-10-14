@@ -89,3 +89,24 @@ def global_compute_image_comparision(refs_images, preds_images):
         f1 += f1_aux
     return precision / float(len(refs_images)), recall / float(
         len(refs_images)), f1 / float(len(refs_images))
+    
+def bb_intersection_over_union(predict_box, ground_truth_box):
+    # determine the (x, y)-coordinates of the intersection rectangle
+    x1 = max(predict_box[0], ground_truth_box[0])
+    y1 = max(predict_box[1], ground_truth_box[1])
+    x2 = min(predict_box[2], ground_truth_box[2])
+    y2 = min(predict_box[3], ground_truth_box[3])
+
+    # compute the area of intersection
+    intersect_area = (x2 - x1) * (y2 - y1)
+
+    # compute the area of bounding boxes
+    predict_area = (predict_box[2] - predict_box[0]) * (predict_box[3] - predict_box[1])
+    ground_truth_area = (ground_truth_box[2] - ground_truth_box[0]) * (ground_truth_box[3] - ground_truth_box[1])
+
+
+    #intersection area divided by prediction and ground-truth area
+    iou = intersect_area / float(predict_area  + ground_truth_area - intersect_area)
+
+
+    return iou
