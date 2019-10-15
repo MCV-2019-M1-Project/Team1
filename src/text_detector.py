@@ -157,6 +157,7 @@ def detect_text_box(gray_im, plot_results):
              """
             rect = (x, y, w, h)
             rects.append(rect)
+            
        
     detected_rects = []
     if rects:
@@ -184,11 +185,13 @@ def detect_text_box(gray_im, plot_results):
         if plot_results:
             fig= plt.figure(figsize=(11,15))
             plt.imshow(im_rgb) 
-            
         else:
-            """
-            Else if there are no rectangles detected in the image
-            """
-            detected_rects = 0
+            pass
+            
+    else:
+        """
+        Else if there are no rectangles detected in the image
+        """
+        detected_rects = 0
 
     return detected_rects
