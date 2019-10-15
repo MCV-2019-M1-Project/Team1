@@ -14,14 +14,63 @@ def remove_overlapped(over_Rects, extt_rects, ind1, ind2):
         y3=min(y1,y2)
         w3=max(x2+w2-x1, x1+w1-x2) 
         h3=max(h1,h2)
-        elem1=extt_rects[ind1]
-        elem2=extt_rects[ind2]
-        extt_rects.remove(elem1)
-        extt_rects.remove(elem2)
+        extt_rects[ind1] = "False"
+        extt_rects[ind2] = "False"
         new_rect = (x3, y3, w3, h3)
         extt_rects.append(new_rect)
         
         return extt_rects
+    
+def erase_overlapped_regions(rects, im_w, im_h):
+    
+    """ 
+    Remove the overlapped rectangles and merge the ones that are very near
+    """
+
+    index_list=[]
+    ext_rects = rects[:]
+    overlapped = []
+#    a = 
+    for i in range(0,len(ext_rects)):
+        overlapped[:] = []
+        b = len(ext_rects)
+        for jj in range (0, b):
+            if ext_rects[i]!="False" and ext_rects[jj]!="False":
+
+                x1, y1, w1, h1 = ext_rects[i]
+                x2, y2, w2, h2 = ext_rects[jj]
+                
+                if x1>x2 and abs(x1-x2-w2)<0.040*im_w and -0.01*im_w<y1-y2<0.01*im_h:
+                    overlapped.append(jj)
+                    
+                else:
+                    overlapped.append(-1)
+            else:
+                overlapped.append(-1)
+                pass
+                
+        index_list[:]=[]
+              
+        overlapped_list = [item != -1 for item in overlapped]
+        elem_overlapped = list(itertools.compress(ext_rects, overlapped_list))   
+        for el in overlapped:
+            if el != -1:
+                index_list.append(el)
+            else:
+                pass
+        for it in range(len(elem_overlapped)):
+            if it != "False" and ext_rects[i] != "False":
+                ext_rects = remove_overlapped(elem_overlapped[it], ext_rects, i, index_list[it])
+    rectangles_no_overlapped = [item != "False" for item in ext_rects]
+    ext_rects = list(itertools.compress(ext_rects, rectangles_no_overlapped)) 
+    if False in rectangles_no_overlapped:
+        ext_rects = erase_overlapped_regions(ext_rects, im_w, im_h)
+    else:
+        pass
+
+        
+        
+    return ext_rects
     
 def erase_inside_regions(rects):
     """ 
@@ -49,41 +98,6 @@ def erase_inside_regions(rects):
         ext_rects = list(itertools.compress(ext_rects, contained_list))
         return ext_rects
     
-def erase_overlapped_regions(rects, im_w, im_h):
-    
-    """ 
-    Remove the overlapped rectangles and merge the ones that are very near
-    """
-
-    index_list=[]
-    ext_rects = rects[:]
-    overlapped = []
-    for i in ext_rects:
-        overlapped[:] = []
-        for j in ext_rects:
-            x1, y1, w1, h1 = i
-            x2, y2, w2, h2 = j
-            
-            if x1>x2 and abs(x1-x2-w2)<0.005*im_w and -0.005*im_w<y1-y2<0.005*im_h:
-                overlapped.append(ext_rects.index(j))
-            else:
-                overlapped.append(-1)
-                
-        index_list[:]=[]
-              
-        overlapped_list = [item != -1 for item in overlapped]
-        elem_overlapped = list(itertools.compress(ext_rects, overlapped_list))   
-        for el in overlapped:
-            if el != -1:
-                index_list.append(el)
-            else:
-                pass
-        for it in range(len(elem_overlapped)):
-            ext_rects = remove_overlapped(elem_overlapped[it], ext_rects, ext_rects.index(i), index_list[it])
-
-        
-        
-    return ext_rects
 
 def detect_text_box(gray_im, plot_results):
     """
@@ -134,7 +148,7 @@ def detect_text_box(gray_im, plot_results):
         x, y, w, h = cv2.boundingRect(c)
         rect_area = w*h
 
-        if w >= 0.02*im_x and w*0.50 > h and h>=0.02*im_y and 0.0020*im_area<rect_area<0.20*im_area:
+        if 7>h/w>0.13 and w >= 0.02*im_x and w*0.50 > h and h>=0.02*im_y and 0.0020*im_area<rect_area<0.20*im_area:
             """
              if w and h aren't too small,
                 area of the rectangle isn't too small or big respect the image area
@@ -144,29 +158,37 @@ def detect_text_box(gray_im, plot_results):
             rect = (x, y, w, h)
             rects.append(rect)
        
-
-
-    outside_rects = erase_inside_regions(rects)
-    no_overlapped_rects = erase_overlapped_regions(outside_rects, im_x, im_y)
-
-    detected_rects = []        
-    list_dilation = [] 
+    detected_rects = []
+    if rects:
+        """
+        If we detect text rectangles
+        """
+        outside_rects = erase_inside_regions(rects)
+        no_overlapped_rects = erase_overlapped_regions(outside_rects, im_x, im_y)
+                
+        list_dilation = [] 
+        
     
-
-
-    for rectangle in no_overlapped_rects:
-        x, y, w, h = rectangle
-        # List of rectangles to return the coordinates as required (tlx, tly, brx, bry)
-        det_rect = (x, y, x+w, y+h)
-        detected_rects.append(det_rect)
-        list_dilation.append(sum(sum(dilation[y:(y+h) , x:x+w]))) 
-    #take the rectangle with biggest values inside    
-    max_dilation_rect=max(list_dilation)
-    text_rect = detected_rects[list_dilation.index(max_dilation_rect)]
-    cv2.rectangle(im_rgb, (text_rect[0], text_rect[1]), (text_rect[2], text_rect[3]), (255, 0, 0), 5)
-      
-    if plot_results:
-        fig= plt.figure(figsize=(11,15))
-        plt.imshow(im_rgb)  
+    
+        for rectangle in no_overlapped_rects:
+            x, y, w, h = rectangle
+            # List of rectangles to return the coordinates as required (tlx, tly, brx, bry)
+            det_rect = (x, y, x+w, y+h)
+            detected_rects.append(det_rect)
+            list_dilation.append(sum(sum(dilation[y:(y+h) , x:x+w]))) 
+        #take the rectangle with biggest values inside    
+        max_dilation_rect=max(list_dilation)
+        text_rect = detected_rects[list_dilation.index(max_dilation_rect)]
+        cv2.rectangle(im_rgb, (text_rect[0], text_rect[1]), (text_rect[2], text_rect[3]), (255, 0, 0), 5)
+          
+        if plot_results:
+            fig= plt.figure(figsize=(11,15))
+            plt.imshow(im_rgb) 
+            
+        else:
+            """
+            Else if there are no rectangles detected in the image
+            """
+            detected_rects = 0
 
     return detected_rects
