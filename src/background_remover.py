@@ -142,13 +142,16 @@ def remove_background(im_path, height_ratio=10, distance_between_peaks=10):
         ]
 
 
-def get_mask(im_path, height_ratio=10, distance_between_peaks=10):
+def get_mask(im_path, height_ratio=10, distance_between_peaks=10, single_sure=False):
     """
     Receives an image and returns the background mask
 
     Arguments:
-        im_path : a path of an image that can contain 1 or 2 paintings.
-                  Currently it only supports 2 painting detection if they are horizontally.
+        - im_path     : a path of an image that can contain 1 or 2 paintings.
+                        Currently it only supports 2 painting detection if they are horizontally.
+                        
+        - single_sure : Set it to True if you know beforehand that will only enter images
+                      with a single painting.
 
     Returns:
         binary_mask: background binary mask
@@ -156,7 +159,7 @@ def get_mask(im_path, height_ratio=10, distance_between_peaks=10):
     """
 
     im = cv2.imread(im_path)
-    middle_h = get_partition_horizontal(im_path)
+    middle_h = None if single_sure else get_partition_horizontal(im_path)
     if middle_h is None:
         return remove_single_background(im, height_ratio, distance_between_peaks)[1]
     else:
