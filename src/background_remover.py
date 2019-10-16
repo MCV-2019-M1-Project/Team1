@@ -116,7 +116,7 @@ def get_partition_horizontal(im_path):
     return cd
 
 
-def remove_background(im_path, height_ratio=10, distance_between_peaks=10):
+def remove_background(im_path, height_ratio=10, distance_between_peaks=10, single_sure=False):
     """
     Receives an image and returns a list with the cropped images that are found on it
 
@@ -130,7 +130,7 @@ def remove_background(im_path, height_ratio=10, distance_between_peaks=10):
     """
 
     im = cv2.imread(im_path)
-    middle_h = get_partition_horizontal(im_path)
+    middle_h = None if single_sure else get_partition_horizontal(im_path)
     if middle_h is None:
         return [remove_single_background(im, height_ratio, distance_between_peaks)[0]]
     else:
