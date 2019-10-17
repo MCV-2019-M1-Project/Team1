@@ -162,7 +162,7 @@ def erase_inside_regions(rects):
         return ext_rects
 
 def text_extraction(im_gray):
-    contours, im_rgb = morphological_processing(im_gray, 30, 'kernel', 'dilationErosion')
+    contours, im_rgb, dilation = morphological_processing(im_gray, 30, 'kernel', 'dilationErosion')
     
     im_x, im_y = im_gray.shape
     im_area =im_x*im_y
