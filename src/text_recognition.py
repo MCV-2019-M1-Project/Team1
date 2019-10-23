@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from text_detector import detect_text_box
 import difflib
 import os.path as path
+import platform
 
 
 if platform.system() == 'Windows':
