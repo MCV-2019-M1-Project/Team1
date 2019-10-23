@@ -2,6 +2,7 @@ import cv2.cv2 as cv2
 import numpy as np
 from scipy.signal import find_peaks
 from scipy.ndimage import gaussian_filter1d
+from text_detector import detect_text_box
 
 
 def my_find_peaks(array, height_ratio, distance_between_peaks):
@@ -25,7 +26,7 @@ def remove_single_background(im, height_ratio=10, distance_between_peaks=10):
             - height_ratio, distance_between_peaks: they control the peak finding algo
 
         Returns:
-            - (cropped_image, binary_mask)
+            - (cropped_image, binary_mask, [left,top,right,bottom])
     """
 
     gray_image = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
@@ -57,7 +58,7 @@ def remove_single_background(im, height_ratio=10, distance_between_peaks=10):
 
     cropped_image = im[top:bottom, left:right].copy()
 
-    return cropped_image, mask
+    return cropped_image, mask, [left, top, right, bottom]
 
 
 def find_silences(array, length=50, threshold=0.03):
@@ -82,7 +83,7 @@ def find_silences(array, length=50, threshold=0.03):
     return silences
 
 
-def get_partition_horizontal(im_path):
+def get_partition_horizontal(image):
     """
     Receives the path of an image that can contain 1 or 2 paintings horizontally and
     Returns:
@@ -94,7 +95,7 @@ def get_partition_horizontal(im_path):
         - None: if it thinks there is only one painting.
     """
 
-    im = cv2.imread(im_path, cv2.IMREAD_GRAYSCALE)
+    im = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     col_var = gaussian_filter1d(np.abs(np.gradient(im.mean(0))), 6)
     third_index = int(len(col_var) * 0.20)
     left_cd = my_find_peaks(col_var, 2, 150)
@@ -116,57 +117,109 @@ def get_partition_horizontal(im_path):
     return cd
 
 
-def remove_background(im_path, height_ratio=10, distance_between_peaks=10, single_sure=False):
+def remove_background(image, height_ratio=10, distance_between_peaks=10, single_sure=False):
     """
     Receives an image and returns a list with the cropped images that are found on it
 
     Arguments:
-        im_path : a path of an image that can contain 1 or 2 paintings.
-                  Currently it only supports 2 painting detection if they are horizontally.
-
+        - image : an opencv image
     Returns:
         list_of_paintings: list of cropped images found in the image, in order.
                            Left to right or top to bottom (currently not supported).
     """
 
-    im = cv2.imread(im_path)
-    middle_h = None if single_sure else get_partition_horizontal(im_path)
+    middle_h = None if single_sure else get_partition_horizontal(image)
     if middle_h is None:
-        return [remove_single_background(im, height_ratio, distance_between_peaks)[0]]
+        return [remove_single_background(image, height_ratio, distance_between_peaks)[0]]
     else:
         return [
-            remove_single_background(im[:, :middle_h, :],
+            remove_single_background(image[:, :middle_h, :],
                                      height_ratio, distance_between_peaks)[0],
-            remove_single_background(im[:, middle_h:, :],
+            remove_single_background(image[:, middle_h:, :],
                                      height_ratio, distance_between_peaks)[0]
         ]
 
 
-def get_mask(im_path, height_ratio=10, distance_between_peaks=10, single_sure=False):
+def get_mask(image, height_ratio=10, distance_between_peaks=10, single_sure=False):
     """
     Receives an image and returns the background mask
 
     Arguments:
-        - im_path     : a path of an image that can contain 1 or 2 paintings.
-                        Currently it only supports 2 painting detection if they are horizontally.
-                        
+        - image : an opencv image
         - single_sure : Set it to True if you know beforehand that will only enter images
                       with a single painting.
-
     Returns:
         binary_mask: background binary mask
 
     """
 
-    im = cv2.imread(im_path)
-    middle_h = None if single_sure else get_partition_horizontal(im_path)
+    middle_h = None if single_sure else get_partition_horizontal(image)
     if middle_h is None:
-        return remove_single_background(im, height_ratio, distance_between_peaks)[1]
+        return remove_single_background(image, height_ratio, distance_between_peaks)[1]
     else:
         return np.concatenate((
-            remove_single_background(im[:, :middle_h, :],
+            remove_single_background(image[:, :middle_h, :],
                                      height_ratio, distance_between_peaks)[1],
 
-            remove_single_background(im[:, middle_h:, :],
+            remove_single_background(image[:, middle_h:, :],
                                      height_ratio, distance_between_peaks)[1]),
                 axis=1)
+
+
+def get_bbox(image, height_ratio=10, distance_between_peaks=10, single_sure=False):
+    """
+    Receives an image and returns the background mask bounding_box
+
+    Arguments:
+        - image : an opencv image
+        - single_sure : Set it to True if you know beforehand that will only enter images
+                      with a single painting.
+    Returns:
+        - List with the bounding boxes of all the paintings found in the image
+
+    """
+
+    middle_h = None if single_sure else get_partition_horizontal(image)
+    if middle_h is None:
+        return [remove_single_background(image, height_ratio, distance_between_peaks)[2]]
+    else:
+
+        first_painting_bbox = remove_single_background(image[:, :middle_h, :],
+                                                       height_ratio, distance_between_peaks)[2]
+
+        [left, top, right, bottom] = remove_single_background(image[:, middle_h:, :],
+                                                              height_ratio, distance_between_peaks)[2]
+
+        adjusted_second_painting_bbox = [left + middle_h, top, right + middle_h, bottom]
+
+        return [first_painting_bbox, adjusted_second_painting_bbox]
+
+
+def get_background_and_text_mask(im, single_sure=False, return_only_bounding_box_pos=False):
+    """
+    Args
+        - im: Assuming an image in bgr color space
+        - single_sure: Set to True if you know the image will only contain one painting
+        - return_only_bounding_box_pos: Pues eso
+    """
+
+    ims = remove_background(im, single_sure=single_sure)
+    mask = get_mask(im, single_sure=single_sure)
+    bg_bboxes = get_bbox(im, single_sure=single_sure)
+
+    text_bboxes = []
+    for i in range(len(ims)):
+        tlx, tly, brx, bry = detect_text_box(cv2.cvtColor(ims[i], cv2.COLOR_RGB2GRAY), False)
+        tlx_bg, tly_bg, brx_bg, bry_bg = bg_bboxes[i]
+
+        mask[tly + tly_bg:bry + tly_bg, tlx + tlx_bg:brx + tlx_bg] = 0
+        text_bboxes.append([tlx + tlx_bg, tly + tly_bg, brx + tlx_bg, bry + tly_bg])
+
+    if return_only_bounding_box_pos:
+        return text_bboxes
+    else:
+        return mask, text_bboxes
+
+
+if __name__ == "__main__":
+    pass
