@@ -6,6 +6,7 @@ import difflib
 import os.path as path
 import platform
 from background_remover import get_bbox
+from fuzzywuzzy import process, fuzz
 
 if platform.system() == 'Windows':
     two_up =  path.abspath(path.join(__file__ ,"../.."))
@@ -36,16 +37,20 @@ def save_single_text(filename, text, mode):
     f = open(filename + ".txt", mode)
     f.write(text)
     
-def image_text_retrieval(text, text_list):
+def image_text_retrieval(text, text_list, method = fuzz.ratio):
     """
     Returns the index of the closest string in the text_list of the input text
+    method =
+           ratio: The Levenshtein Distance of two string.
+           partial_ratio: The ratio of most similar substring.
+           token_sort_ratio: Measure of the sequences' similarity sorting the token before comparing.
+           token_set_ratio
     """
-    
-    closest_match = difflib.get_close_matches(text, text_list, cutoff=0.35)
+    closest_match = process.extract(text, text_list, scorer=method)
+#    closest_match = difflib.get_close_matches(text, text_list, cutoff=0.35)
     match_index = text_list.index(closest_match[0])
-    
-    return match_index
 
+    return match_index
 def save_image_text(filename, paints, gray_img, recog_config):
     """
     From a list of coordinates of the paintings in an image,
