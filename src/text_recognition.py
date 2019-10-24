@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import cv2
 import pytesseract
 import matplotlib.pyplot as plt
@@ -31,7 +29,10 @@ def text_recognition(image, config = '-l eng --oem 1 --psm 3',plot_rect = False)
     
     return text
 
-def save_text(filename, text, mode):
+def save_single_text(filename, text, mode):
+    """
+    Open a file "filename" using the input mode and save input text
+    """
     f = open(filename + ".txt", mode)
     f.write(text)
     
@@ -45,7 +46,19 @@ def image_text_retrieval(text, text_list):
     
     return match_index
 
-#### Ex   
+def save_image_text(filename, paints, gray_img, recog_config):
+    """
+    From a list of coordinates of the paintings in an image,
+    computes the text detection and recognition and saves the resultant text in a file for every image
+    """
+    for p in paints:
+        obtained_text = text_recognition(gray_img[p[1]:p[3], p[0]:p[2]], recog_config, False)
+        if paintings.index(p)==0:
+            save_single_text(filename, obtained_text, "w+")
+        if paintings.index(p)!=0:
+            save_single_text(filename, obtained_text, "a")
+
+##### Ex   
 #config = ('-l eng --oem 1 --psm 3')
 #
 #for i in range(29, -1, -1):
@@ -56,11 +69,5 @@ def image_text_retrieval(text, text_list):
 #    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 #    paintings = []
 #    paintings = get_bbox(image)
-#    
-#    for p in paintings:
-#        obtained_text = text_recognition(gray[p[1]:p[3], p[0]:p[2]], config, True)
-#        print(obtained_text)
-#        if paintings.index(p)==0:
-#            save_text('000%s' % (n), obtained_text, "w+")
-#        if paintings.index(p)!=0:
-#            save_text('000%s' % (n), obtained_text, "a")
+#    save_image_text('000%s' % (n), paintings, gray, config)
+
