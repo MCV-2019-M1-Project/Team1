@@ -4,7 +4,7 @@ from cv2 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
-def LBP(image, P, R, method='uniform'):
+def multiblock_LBP(image, n_blocks, P, R, method='uniform'):
     """
     Args:
         - image: Gray scale image (N x M) array
@@ -27,17 +27,28 @@ def LBP(image, P, R, method='uniform'):
             ‘var’: rotation invariant variance measures of the contrast of local
                 image texture which is rotation but not gray scale invariant.
         Returns:
-            LBP image (N x M) array
+            LBP histogram
     """
+    def LBP(image, P, R, method):
+        lbp = feature.local_binary_pattern(image, P, R, method)    
+        hist, _ = np.histogram(lbp.ravel(), bins=np.arange(0, P+3), range=(0, P+2))
+        hist = hist.astype(float)
+        hist /= (hist.sum() + 1e-7)
+        return hist
+    
+    image_height, image_width = image.shape
+    block_height = image_height / n_blocks
+    block_width = image_width / n_blocks
 
-    lbp = feature.local_binary_pattern(image, P, R, method)
-    x = itemfreq(lbp.ravel())
-    hist = x[:, 1]/sum(x[:, 1])
-    return hist
-
-
-
-im = cv2.imread('../bbdd/bbdd_00000.jpg')
-im_gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
-hist = LBP(im_gray, 24, 8)
-print(hist)
+    blocks = []
+    for y in range(n_blocks):
+        for x in range(n_blocks):
+            block = image[int(y*block_height):int((y+1)*block_height), int(x*block_width):int((x+1)*block_width)]
+            blocks.append(block)
+    
+    block_feature = []
+    for block in blocks:
+        block_histogram = LBP(block, P, R, method)
+        block_feature.extend(block_histogram)
+    
+    return block_feature
