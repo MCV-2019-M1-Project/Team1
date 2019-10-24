@@ -4,7 +4,7 @@ from cv2 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
-def multiblock_LBP(image, n_blocks, P, R, method='uniform'):
+def LBP(image, n_blocks, P, R, method='uniform'):
     """
     Args:
         - image: Gray scale image (N x M) array
@@ -52,3 +52,9 @@ def multiblock_LBP(image, n_blocks, P, R, method='uniform'):
         block_feature.extend(block_histogram)
     
     return block_feature
+
+def HOG(image):
+    raise NotImplementedError
+
+def DCT(image):
+    raise NotImplementedError
