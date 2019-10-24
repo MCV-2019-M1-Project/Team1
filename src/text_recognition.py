@@ -53,9 +53,9 @@ def save_image_text(filename, paints, gray_img, recog_config):
     """
     for p in paints:
         obtained_text = text_recognition(gray_img[p[1]:p[3], p[0]:p[2]], recog_config, False)
-        if paintings.index(p)==0:
+        if paints.index(p)==0:
             save_single_text(filename, obtained_text, "w+")
-        if paintings.index(p)!=0:
+        if paints.index(p)!=0:
             save_single_text(filename, obtained_text, "a")
 
 ##### Ex   
