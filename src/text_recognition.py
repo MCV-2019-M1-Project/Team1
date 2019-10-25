@@ -5,7 +5,7 @@ from text_detector import detect_text_box
 import difflib
 import os.path as path
 import platform
-
+from background_remover import get_bbox
 
 if platform.system() == 'Windows':
     two_up =  path.abspath(path.join(__file__ ,"../.."))
@@ -24,9 +24,18 @@ def text_recognition(image, config = '-l eng --oem 1 --psm 3',plot_rect = False)
     ret,th3 = cv2.threshold(txt_im, 160, 255, cv2.THRESH_BINARY)
     text = pytesseract.image_to_string(th3, config=config)
     if plot_rect:
+        fig= plt.figure(figsize=(11,15))
         plt.imshow(th3, 'gray') 
+    
     return text
 
+def save_single_text(filename, text, mode):
+    """
+    Open a file "filename" using the input mode and save input text
+    """
+    f = open(filename + ".txt", mode)
+    f.write(text)
+    
 def image_text_retrieval(text, text_list):
     """
     Returns the index of the closest string in the text_list of the input text
@@ -36,13 +45,29 @@ def image_text_retrieval(text, text_list):
     match_index = text_list.index(closest_match[0])
     
     return match_index
-    
-### Ex   
-path = 'D:\\Users\\USUARIO\\Documents\\M1.IntroductionToHumanAndVC\\M1.P2\\qsd1_w2\\00003.jpg' 
 
-image = cv2.imread(path)
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+def save_image_text(filename, paints, gray_img, recog_config):
+    """
+    From a list of coordinates of the paintings in an image,
+    computes the text detection and recognition and saves the resultant text in a file for every image
+    """
+    for p in paints:
+        obtained_text = text_recognition(gray_img[p[1]:p[3], p[0]:p[2]], recog_config, False)
+        if paints.index(p)==0:
+            save_single_text(filename, obtained_text, "w+")
+        if paints.index(p)!=0:
+            save_single_text(filename, obtained_text, "a")
 
-config = ('-l eng --oem 1 --psm 3')
-obtained_text = text_recognition(gray, config, False)
-print(obtained_text)
+##### Ex   
+#config = ('-l eng --oem 1 --psm 3')
+#
+#for i in range(29, -1, -1):
+#    n = str(i).zfill(2)
+#    path = 'D:\\Users\\USUARIO\\Documents\\M1.IntroductionToHumanAndVC\\M1.P3\\qsd2_w3\\000%s.jpg' % (n)
+##path = 'D:\\Users\\USUARIO\\Documents\\M1.IntroductionToHumanAndVC\\M1.P3\\qsd2_w3\\00024.jpg'
+#    image = cv2.imread(path)
+#    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+#    paintings = []
+#    paintings = get_bbox(image)
+#    save_image_text('000%s' % (n), paintings, gray, config)
+
