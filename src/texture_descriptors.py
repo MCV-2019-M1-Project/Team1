@@ -43,8 +43,7 @@ def LBP(image, n_blocks, P, R, method='uniform', mask=None, histogram_size=[255]
         lbp = np.float32(feature.local_binary_pattern(image, P, R, method))
         
         # Calc the normalized histogram of the LBP feature
-        hist = calc_normalized_histogram(lbp, mask, [0], hist_size, ranges)
-        return hist
+        return calc_normalized_histogram(image, mask, [0], hist_size, ranges)
     
     # Get the image blocks
     image_blocks = calc_blocks_from_image(image, n_blocks)
@@ -55,10 +54,13 @@ def LBP(image, n_blocks, P, R, method='uniform', mask=None, histogram_size=[255]
     # Get the mask blocks
     mask_blocks = calc_blocks_from_image(mask, n_blocks)
     
-    image_histogram = []
+    image_histogram = None
     for image_block, mask_block in zip(image_blocks, mask_blocks):
         block_histogram = LBP(image_block, mask_block, P, R, method, histogram_size, histogram_ranges)
-        image_histogram.extend(block_histogram)
+        if image_histogram is not None:
+            image_histogram = np.concatenate((block_histogram, image_histogram))
+        else:
+            image_histogram = block_histogram
     
     return image_histogram
 
@@ -157,13 +159,3 @@ def DCT(image, resize_window, n_blocks, k_coeff):
             sys.exit()
         
     return feature
-
-img = cv2.imread('../bbdd/bbdd_00000.jpg')
-img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-x = LBP(img, 5, 8, 3)
-img2 = cv2.imread('../bbdd/bbdd_00001.jpg')
-img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-x2 = LBP(img, 5, 8, 3)
-
-print(x)
-cv2.compareHist(x, x2, cv2.HISTCMP_HELLINGER)
