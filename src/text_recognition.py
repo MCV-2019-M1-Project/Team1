@@ -5,8 +5,9 @@ from text_detector import detect_text_box
 import difflib
 import os.path as path
 import platform
-from background_remover import get_bbox
 from fuzzywuzzy import process, fuzz
+from background_remover import get_bbox
+
 
 if platform.system() == 'Windows':
     two_up =  path.abspath(path.join(__file__ ,"../.."))
@@ -31,9 +32,6 @@ def text_recognition(image, config = '-l eng --oem 1 --psm 3',plot_rect = False)
     return text
 
 def save_single_text(filename, text, mode):
-    """
-    Open a file "filename" using the input mode and save input text
-    """
     f = open(filename + ".txt", mode)
     f.write(text)
     
@@ -51,18 +49,18 @@ def image_text_retrieval(text, text_list, method = fuzz.ratio):
     match_index = text_list.index(closest_match[0])
 
     return match_index
+
 def save_image_text(filename, paints, gray_img, recog_config):
     """
-    From a list of coordinates of the paintings in an image,
+    From a list of paintings with the external coordinates of the painting and the total image,
     computes the text detection and recognition and saves the resultant text in a file for every image
     """
     for p in paints:
-        obtained_text = text_recognition(gray_img[p[1]:p[3], p[0]:p[2]], recog_config, False)
+        obtained_text = text_recognition(gray_img[p[1]:p[3], p[0]:p[2]], recog_config, True)
         if paints.index(p)==0:
             save_single_text(filename, obtained_text, "w+")
         if paints.index(p)!=0:
             save_single_text(filename, obtained_text, "a")
-
 ##### Ex   
 #config = ('-l eng --oem 1 --psm 3')
 #
@@ -75,4 +73,5 @@ def save_image_text(filename, paints, gray_img, recog_config):
 #    paintings = []
 #    paintings = get_bbox(image)
 #    save_image_text('000%s' % (n), paintings, gray, config)
+
 
