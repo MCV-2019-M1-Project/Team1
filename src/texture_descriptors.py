@@ -102,9 +102,9 @@ def HOG(image, orientations=9, pixels_per_cell=(8, 8), cells_per_block=(3, 3), b
             otherwise as spatial.
     Returns
     """
-
-    hog = feature.hog(image)
-    return hog
+    
+    return feature.hog(image, orientations, pixels_per_cell, cells_per_block, block_norm,
+                       visualize, transform_sqrt, feature_vector, multichannel)
 
 def DCT(image, resize_window, n_blocks, k_coeff):
     """
