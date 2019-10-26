@@ -33,7 +33,7 @@ def image_filtering(self, ddepth, kernel):
 
     return cv2.filter2D(self._img, ddepth, kernel)
 
-def calc_normalized_histogram(image, channel, hist_size=[256], ranges=[0, 256], masks=None):
+def calc_normalized_histogram(image, mask, channel, hist_size=[256], ranges=[0, 256]):
     """
     Args:
         - image: image where the histogram is going to be computed
@@ -44,18 +44,10 @@ def calc_normalized_histogram(image, channel, hist_size=[256], ranges=[0, 256], 
             * 2 calculate red histogram
         - hist_size: this represents our BIN count. By default is full scale.
         - ranges: histogram range. By default is full range
-        - mask: None for full image or list of masks
     Returns
         The normalized historgram of the image a 256x1 array by default
     """
-    if masks is None:
-        return cv2.normalize(cv2.calcHist([painting.img], channel, None, hist_size, ranges), 0.0, 1.0)
-    else:
-        hists = np.empty(shape=[0])
-        for i in masks:
-            hist_aux = cv2.normalize(cv2.calcHist([painting.img], channel, i, hist_size, ranges), 0.0, 1.0)
-            hists = np.append(hists, hist_aux)
-        return hists
+    return cv2.normalize(cv2.calcHist([image], channel, mask, hist_size, ranges), 0.0, 1.0)
 
 def calc_histogram_1D_luminance_and_2D_chrominance(painting, masks=None):
     """
@@ -140,3 +132,20 @@ def compute_multires_histograms(painting, list_gauss_filter_sizes, channel, hist
                 hist_aux = calc_normalized_histogram(im_resized, channel, hist_size, ranges, [j])
                 hists = np.append(hists, hist_aux)
         return hists
+
+def calc_blocks_from_image(image, n_blocks):
+    """
+    Computes the image blocks of an image given the number of divisions to make horizontally and vertically
+    Args:
+        - image: an image
+        - n_blocks: number of horizontal and vertical blocks the image will be divided in
+    Returns
+        A list with n_blocks * n_blocks items where every item is section of the original image
+    """
+
+    cropped_images = []
+    for i in range(n_blocks):
+        for j in range(n_blocks):
+            cropped_image = image[int(i*image.shape[0]/n_blocks):int((i + 1)*image.shape[0]/n_blocks), int(j*image.shape[1]/n_blocks):int((j + 1)*image.shape[1]/n_blocks)]
+            cropped_images.append(cropped_image)
+    return cropped_images
