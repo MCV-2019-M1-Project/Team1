@@ -5,6 +5,7 @@ import itertools
 import numpy as np
 
 
+
 def low_pass_filter(img):
     kernel = np.ones((5,5),np.float32)/100
     dst = cv2.filter2D(img,-1,kernel)
@@ -47,7 +48,9 @@ def morphological_processing(gray_im, thr, blur_method, post_thresholding):
 
 
     #find contours of the connected components in the binarized image
-    im2, cont, hierarchy = cv2.findContours(processed_im, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    # im2, cont, hierarchy = cv2.findContours(processed_im, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE) PETA!!!!!!!!!
+    # https://stackoverflow.com/questions/54734538/opencv-assertion-failed-215assertion-failed-npoints-0-depth-cv-32
+    cont, _ = cv2.findContours(processed_im, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
     rgb = cv2.cvtColor(gray_im, cv2.COLOR_GRAY2RGB)
 
@@ -212,7 +215,6 @@ def detect_text_box(gray_im, plot_results):
     im_area =im_x*im_y
     rects = []
     for c in contours:
-
         x, y, w, h = cv2.boundingRect(c)
         rect_area = w*h
 

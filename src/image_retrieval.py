@@ -5,15 +5,17 @@ import ml_metrics as metrics
 import datetime
 import random
 import numpy as np
-
+from text_recognition import text_recognition
 from background_remover import remove_background
+import re
+
 #0: Implementar retrieval system #DONE
 
 # PARA LA TARDE: Testear y debugar retrieval system
 
-##########################################################
+#1: Task 2: Implementar el image retrieval SOLO con text recognition (QSD1) map@1: 0.233 - map@5: 0.361 - map@10: 0.361
 
-#TODO #1: Task 2: Implementar el image retrieval SOLO con text recognition (QSD1) map@1: - map@5: - map@10:
+##########################################################
 
 #TODO #2: Task 2: Implementar el image retrieval SOLO con color descriptor (QSD1) map@1: - map@5: - map@10:
 
@@ -59,7 +61,15 @@ def levenshtein(s1, s2):
     return previous_row[-1]
 
 def text_similarity(desc1, desc2):
-    return 1.0/levenshtein(desc1, desc2)
+    # Quito lo que no sean letras en minuscula/mayuscula y espacios
+    desc1 = re.sub(r'[^a-zA-Z ]','',desc1)
+    desc2 = re.sub(r'[^a-zA-Z ]','',desc2)
+    if len(desc1) == len(desc2) == 0:
+        return 0
+    elif desc1 == desc2:
+        return 1
+    else:
+        return 1.0/levenshtein(desc1, desc2)
 
 def text_bbdd(image, **kwargs):
     image_filepath = kwargs["image_filepath"]
@@ -72,7 +82,7 @@ def text_bbdd(image, **kwargs):
         return author_or_nada
 
 def text_descriptor(image, **kwargs):
-    return "patata"
+    return text_recognition(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY))
 
 #######################
 
@@ -80,11 +90,14 @@ def text_descriptor(image, **kwargs):
 
 
 def apply_preprocessing(image_filepath, preprocessing, no_bg, single_sure):
-    ims_source = [cv2.imread(image_filepath)]
-    for f in preprocessing:
-        ims_dest = [f(im, single_sure=single_sure) for im in ims_source]
-        ims_source = ims_dest.copy()
-    return ims_source
+    im = cv2.imread(image_filepath)
+    return [im] if no_bg else remove_background(im, single_sure=single_sure)
+
+    # ims_source = [cv2.imread(image_filepath)]
+    # for f in preprocessing:
+    #     ims_dest = [f(im, single_sure=single_sure) for im in ims_source]
+    #     ims_source = ims_dest.copy()
+    # return ims_source
 
 ### DE AQUÍ PARA ABAJO IS DONE ### STILL NOT TESTED ###
 
@@ -191,7 +204,7 @@ def get_descriptors_given_query_dir(descriptors_definition,
                                                                     no_bg,
                                                                     single_sure)
         else:
-            list_containing_one_or_two_images = [[1,2,3]]#[cv2.imread(image_filepath)]
+            list_containing_one_or_two_images = [cv2.imread(image_filepath)]
 
         print("\t"+str(len(list_containing_one_or_two_images))+ " paintings were found in the image")
 
@@ -260,6 +273,7 @@ def get_map_at_several_ks(query_dir, ks,
         if recompute_bbdd_descriptors:
             with open(os.path.join("..","bbdd","descriptors.pkl"), "wb") as f:
                 pickle.dump(bbdd_descriptors, f)
+            print("Written bbdd descriptors at " + os.path.join("..","bbdd","descriptors.pkl"))
 
     try:
         query_descriptors = get_descriptors_given_query_dir(descriptors,
@@ -276,6 +290,7 @@ def get_map_at_several_ks(query_dir, ks,
         if recompute_query_descriptors:
             with open(os.path.join(query_dir,"descriptors.pkl"), "wb") as f:
                 pickle.dump(query_descriptors, f)
+            print("Written query descriptors at "+os.path.join(query_dir,"descriptors.pkl"))
 
     predictions = compute_similarity_all_queryset(bbdd_descriptors, query_descriptors, descriptors_sim, k_closest=3)
 
@@ -295,8 +310,7 @@ def get_map_at_several_ks(query_dir, ks,
             if len(image_prediction_list) == len(gt_list): # El numero de cuadros detectados es el bueno
                 for single_prediction, single_gt in zip(image_prediction_list, gt_list):
                     for k in ks:
-                        # FAKE NEWS
-                        map_[k] += metrics.apk([single_gt], [single_gt]+single_prediction, k)
+                        map_[k] += metrics.apk([single_gt], single_prediction, k)
                     number_of_paintings_queried += 1
 
             elif len(image_prediction_list) < len(gt_list): # Habia 2 cuadros y solo hemos detectado uno
@@ -324,17 +338,14 @@ def get_map_at_several_ks(query_dir, ks,
 
 if __name__ == "__main__":
     get_map_at_several_ks(
-        query_dir=os.path.join("..","queries","qsd2_w3"),
+        query_dir=os.path.join("..","queries","qsd1_w3"),
         ks=[1, 5, 10],
         descriptors={"text": text_descriptor},
         descriptors_sim={"text": text_similarity},
-        preprocesses=[remove_background],
-        recompute_bbdd_descriptors=True
+        preprocesses=None,
+        recompute_bbdd_descriptors=False,
+        recompute_query_descriptors=True
     )
-
-
-# TODO: Mirar por qué no funciona la integración del remove_background
-
 
 
 

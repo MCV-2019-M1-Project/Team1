@@ -13,6 +13,9 @@ if platform.system() == 'Windows':
     two_up =  path.abspath(path.join(__file__ ,"../.."))
     pth = path.join(two_up ,"Tesseract-OCR\\tesseract.exe")
     pytesseract.pytesseract.tesseract_cmd = pth
+else: # Mac de Hermes :)
+    pytesseract.pytesseract.tesseract_cmd = "/usr/local/Cellar/tesseract/4.1.0/bin/tesseract"
+
 
 def text_recognition(image, config = '-l eng --oem 1 --psm 3',plot_rect = False):
     """
