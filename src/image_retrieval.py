@@ -11,6 +11,7 @@ import re
 from denoising import remove_salt_and_pepper_noise
 from texture_descriptors import LBP, HOG, DCT
 from image_descriptors import similarity_for_descriptors, best_color_descriptor
+from text_detector import get_text_mask_BGR
 
 #0: Implementar retrieval system #DONE
 
@@ -26,11 +27,11 @@ from image_descriptors import similarity_for_descriptors, best_color_descriptor
 
 #5: Task 5: Retrieval con QSD2: Integrar la retirada del fondo y soportar 2 cuadros por query. (QSD2) map@1: 0.44 - map@5: 0.5 - map@10: 0.51
 
+#3: Task 3: Implementar el image retrieval SOLO con texture descriptor (QSD1) map@1: 0.467 - map@5: 0.533 - map@10: 0.533
+
 ##########################################################
 
-#TODO #3: Task 3: Implementar el image retrieval SOLO con texture descriptor (QSD1) map@1: - map@5: - map@10:
-
-#TODO #6: Submission (María Rodríguez): Para cada imagen de las queries de test (QST1 y QST2) escribir un file con el texto extraído
+#TODO #6: Submission (María Farge): Para cada imagen de las queries de test (QST1 y QST2) escribir un file con el texto extraído
 
 ## DUMMYS #####
 
@@ -98,11 +99,19 @@ def text_descriptor(image, **kwargs):
 
 def generic_histogram_similarity(desc1, desc2):
     # Correlation es una similitud
-    return similarity_for_descriptors(desc1, desc2, distance_method="correlation")
+    sim = similarity_for_descriptors(desc1, desc2, distance_method="x2_dist")
+    return sim
 
+def lbp_similarity(desc1, desc2):
+    # Correlation es una similitud
+    sim = similarity_for_descriptors(desc1, desc2, distance_method="x2_dist")
+    return sim
 
 def lbp_descriptor(image, **kwargs):
-    return LBP(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY),
+    #mask = get_text_mask_BGR(image)
+    #kwargs.update(mask=mask)
+    image_in_specific_space = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    return LBP(image_in_specific_space,
                **kwargs
     )
 
@@ -117,7 +126,8 @@ def hog_descriptor(image, **kwargs):
 
 
 def color_descriptor(image, **kwargs):
-    kwargs.update(mask=None)
+    mask = get_text_mask_BGR(image)
+    kwargs.update(mask=mask)
     image_in_specific_space = cv2.cvtColor(image, cv2.COLOR_RGB2YCrCb)
     return best_color_descriptor(image_in_specific_space, **kwargs)
 
@@ -420,7 +430,7 @@ def lbp_pipeline():
         recompute_bbdd_descriptors=True,
         recompute_query_descriptors=True,
         kwargs_for_descriptors = {
-            'texture_lbp': dict(n_blocks=5, P=24, R=3)
+            'texture_lbp': dict(n_blocks=2, P=4, R=3, histogram_size=[255])
         }
     )
 
@@ -468,17 +478,10 @@ def color_and_text_pipeline():
             preprocesses=[apply_preprocessing],
             recompute_bbdd_descriptors=True,
             recompute_query_descriptors=True,
-            submission=True
+            no_bg=False
     )
 
+
 if __name__ == "__main__":
-    color_and_text_pipeline()
-
-
-
-
-
-
-
-
-
+    #lbp_pipeline()
+    color_pipeline()
