@@ -70,11 +70,11 @@ def calc_histogram_1D_luminance_and_2D_chrominance(image, mask):
     """
 
     #Compute histogram 2D
-    hist2D = calc_normalized_histogram(image, mask, [1,2], [32, 32], [0, 256, 0, 256])
+    hist2D = calc_normalized_histogram(image, mask, [1,2], [256, 256], [0, 256, 0, 256])
     #Flatten 2D histogram
     hist2D_flatten = hist2D.flatten()
     #Compute histogram 1D
-    hist1D = calc_normalized_histogram(image, mask, [0], [64], [0, 256])
+    hist1D = calc_normalized_histogram(image, mask, [0], [256], [0, 256])
     #Join and return features
     return np.append(hist2D_flatten, hist1D)
 
@@ -129,7 +129,7 @@ def calc_blocks_from_image(image, n_blocks):
             cropped_images.append(cropped_image)
     return cropped_images
 
-def best_color_descriptor(image, mask=None):
+def best_color_descriptor(image, mask):
     """
     Computes best color descriptor
     Args:
@@ -163,7 +163,7 @@ def best_color_descriptor(image, mask=None):
 
     return output_histograms
 
-def similarity_for_descriptors(descriptor1, descriptor2, distance_method="correlation"):
+def correlation_best_color_descriptor(descriptor1, descriptor2, distance_method=correlation):
     """
     Computes the correlation between both descriptors
     Args:
