@@ -163,9 +163,9 @@ def best_color_descriptor(image, mask):
 
     return output_histograms
 
-def distance_best_color_descriptor(descriptor1, descriptor2, distance_method=correlation):
+def correlation_best_color_descriptor(descriptor1, descriptor2, distance_method=correlation):
     """
-    Computes the distance between both descriptors
+    Computes the correlation between both descriptors
     Args:
         - descriptor1: descriptor of one image obtained from best_color_descriptor()
         - descriptor1: descriptor of one image obtained from best_color_descriptor()
@@ -177,7 +177,7 @@ def distance_best_color_descriptor(descriptor1, descriptor2, distance_method=cor
             - correlation
             - hellinger
     Returns
-        Distance between descriptor1 and descriptor2
+        Correlation between descriptor1 and descriptor2
     """
     distance = 0.0
     for histogram_desc1, histogram_desc2 in zip(descriptor1, descriptor2):
@@ -193,4 +193,9 @@ def distance_best_color_descriptor(descriptor1, descriptor2, distance_method=cor
             distance += hellinger(histogram_desc1, histogram_desc2)
         elif distance_method == 'correlation':
             distance += correlation(histogram_desc1, histogram_desc2)
+    if distance_method == 'euclidean' or distance_method == 'l1_dist' or distance_method == 'x2_dist' or distance_method == 'hellinger':
+        if distance == 0.0:
+            return 9999999.9
+        else:
+            return 1/distance
     return distance
