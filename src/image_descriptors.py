@@ -129,7 +129,7 @@ def calc_blocks_from_image(image, n_blocks):
             cropped_images.append(cropped_image)
     return cropped_images
 
-def best_color_descriptor(image, mask):
+def best_color_descriptor(image, mask=None):
     """
     Computes best color descriptor
     Args:
@@ -163,7 +163,7 @@ def best_color_descriptor(image, mask):
 
     return output_histograms
 
-def correlation_best_color_descriptor(descriptor1, descriptor2, distance_method=correlation):
+def similarity_for_descriptors(descriptor1, descriptor2, distance_method="correlation"):
     """
     Computes the correlation between both descriptors
     Args:

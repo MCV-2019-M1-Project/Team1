@@ -6,8 +6,11 @@ import datetime
 import random
 import numpy as np
 from text_recognition import text_recognition
-from background_remover import remove_background
+from background_remover import remove_background, get_background_and_text_mask
 import re
+from denoising import remove_salt_and_pepper_noise
+from texture_descriptors import LBP, HOG, DCT
+from image_descriptors import similarity_for_descriptors, best_color_descriptor
 
 #0: Implementar retrieval system #DONE
 
@@ -15,21 +18,23 @@ import re
 
 #1: Task 2: Implementar el image retrieval SOLO con text recognition (QSD1) map@1: 0.233 - map@5: 0.361 - map@10: 0.361
 
+# Integrado el denoising: He detectado que el denoising jode un poco el text_recognition
+
+#2: Task 2: Implementar el image retrieval SOLO con color descriptor (QSD1) map@1: 0.63 - map@5: 0.64 - map@10: 0.65
+
+#4: Task 4: Combinar descriptores anteriores - polling system (QSD1) map@1: 0.67 - map@5: 0.72 - map@10: 0.72
+
+#5: Task 5: Retrieval con QSD2: Integrar la retirada del fondo y soportar 2 cuadros por query. (QSD2) map@1: 0.44 - map@5: 0.5 - map@10: 0.51
+
 ##########################################################
 
-#TODO #2: Task 2: Implementar el image retrieval SOLO con color descriptor (QSD1) map@1: - map@5: - map@10:
-
 #TODO #3: Task 3: Implementar el image retrieval SOLO con texture descriptor (QSD1) map@1: - map@5: - map@10:
-
-#TODO #4: Task 4: Combinar descriptores anteriores - polling system (QSD1) map@1: - map@5: - map@10:
-
-#TODO #5: Task 5: Retrieval con QSD2: Integrar la retirada del fondo y soportar 2 cuadros por query. (QSD2) map@1: - map@5: - map@10:
 
 #TODO #6: Submission (María Rodríguez): Para cada imagen de las queries de test (QST1 y QST2) escribir un file con el texto extraído
 
 ## DUMMYS #####
 
-def how_similar(desc1, desc2):
+def how_similar_dummy(desc1, desc2):
     return random.random()
 
 def dummy_descriptor(image, **kwargs):
@@ -38,6 +43,9 @@ def dummy_descriptor(image, **kwargs):
 ###############
 
 ## TEXT-DESCRIPTORS ###
+
+def sanitize(s):
+    return re.sub(r'[^a-zA-Z ]','',s)
 
 def levenshtein(s1, s2):
     if len(s1) < len(s2):
@@ -82,24 +90,49 @@ def text_bbdd(image, **kwargs):
         return author_or_nada
 
 def text_descriptor(image, **kwargs):
-    return text_recognition(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY))
+    return sanitize(text_recognition(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)))
 
 #######################
 
+## TEXTURE DESCRIPTORS ##
+
+def generic_histogram_similarity(desc1, desc2):
+    # Correlation es una similitud
+    return similarity_for_descriptors(desc1, desc2, distance_method="correlation")
+
+
+def lbp_descriptor(image, **kwargs):
+    return LBP(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY),
+               **kwargs
+    )
+
+def hog_similarity(desc1, desc2):
+    return similarity_for_descriptors(desc1, desc2, distance_method="euclidean")
+
+def hog_descriptor(image, **kwargs):
+    return HOG(image)
+
+
+### COLOR DESCRIPTORS ####################
+
+
+def color_descriptor(image, **kwargs):
+    kwargs.update(mask=None)
+    image_in_specific_space = cv2.cvtColor(image, cv2.COLOR_RGB2YCrCb)
+    return best_color_descriptor(image_in_specific_space, **kwargs)
+
+
+#########################
+
 ## PREPROCESSING ##########
 
+def apply_denoising(im):
+    return remove_salt_and_pepper_noise(im)
 
 def apply_preprocessing(image_filepath, preprocessing, no_bg, single_sure):
     im = cv2.imread(image_filepath)
+    #im = apply_denoising(im)
     return [im] if no_bg else remove_background(im, single_sure=single_sure)
-
-    # ims_source = [cv2.imread(image_filepath)]
-    # for f in preprocessing:
-    #     ims_dest = [f(im, single_sure=single_sure) for im in ims_source]
-    #     ims_source = ims_dest.copy()
-    # return ims_source
-
-### DE AQUÍ PARA ABAJO IS DONE ### STILL NOT TESTED ###
 
 def merge_similarities(sim_by_desc):
     """
@@ -132,14 +165,16 @@ def order_by_similarity(bbdd_descriptors, query_descriptor, descriptors_sim):
     sim_by_desc = {}
 
     for desc_name, desc_obj in query_descriptor.items():
+        print("\tComputing similarity for descriptor "+desc_name)
         # De la base de datos, tengo que coger la imagen "i", y dentro de esta SIEMPRE la 0, porque la bbdd solo tiene un cuadro
         sim_list = [descriptors_sim[desc_name](desc_obj, bbdd_descriptors[i][0][desc_name]) for i in sorted(bbdd_descriptors.keys())]
         sim_by_desc[desc_name] = sim_list[:]
 
     final_order = merge_similarities(sim_by_desc)
+    print("\tMerged predictions:",final_order[:10])
     return final_order
 
-def compute_similarity_all_queryset(bbdd_descriptors, query_descriptors, descriptors_sim, k_closest=10):
+def compute_similarity_all_queryset(bbdd_descriptors, query_descriptors, descriptors_sim, k_closest=20):
     """
     :param query_descriptors: [im_num: { desc_name: fun(I) -> obj , ... }, ...]
     :param bbdd_descriptors:  [im_num: { desc_name: fun(I) -> obj , ... }, ...]
@@ -148,6 +183,7 @@ def compute_similarity_all_queryset(bbdd_descriptors, query_descriptors, descrip
     """
     predictions = []
     for query_key in sorted(query_descriptors.keys()): # Itero sobre todas las queries
+        print("Computing similarity for query #"+str(query_key))
         descriptors_list = query_descriptors[query_key] # Lista que contiene un diccionario de descriptores por cada cuadro encontrado
         query_image_result = []
         for query_descriptor in descriptors_list: # query_descriptor es un { desc_name: fun(I) -> obj , ... }
@@ -164,7 +200,9 @@ def get_descriptors_given_query_dir(descriptors_definition,
                                     recompute=True,
                                     preprocessing=None,
                                     no_bg=False,
-                                    single_sure=False):
+                                    single_sure=False,
+                                    kwargs_for_descriptors=None
+                                    ):
     """
     Abstraction layer that either obtains a cached version of the bbdd descriptors or recomputes and stores them
     :param descriptors_definition: dict of functions that take an image and return an obj
@@ -208,12 +246,18 @@ def get_descriptors_given_query_dir(descriptors_definition,
 
         print("\t"+str(len(list_containing_one_or_two_images))+ " paintings were found in the image")
 
+        if kwargs_for_descriptors is None: kwargs_for_descriptors = {}
         for descriptor_name, descriptor_func in descriptors_definition.items():
-
+            if descriptor_name in kwargs_for_descriptors:
+                kwargs_for_this_descriptor = kwargs_for_descriptors[descriptor_name]
+            else:
+                kwargs_for_this_descriptor = {}
+            if descriptor_func == text_bbdd:
+                kwargs_for_this_descriptor.update(image_filepath=image_filepath)
             #try:
             for i, im in enumerate(list_containing_one_or_two_images):
                 print("\tApplying descriptor " + descriptor_name + " to painting #"+str(i)+"... ",end="")
-                descriptors[im_num][i][descriptor_name] = descriptor_func(im, image_filepath=image_filepath)
+                descriptors[im_num][i][descriptor_name] = descriptor_func(im, **kwargs_for_this_descriptor)
                 print("DONE")
             #except BaseException as e:
             #    print(e)
@@ -230,7 +274,9 @@ def get_map_at_several_ks(query_dir, ks,
                           single_sure=False,
                           submission=False,
                           recompute_bbdd_descriptors=True,
-                          recompute_query_descriptors=True):
+                          recompute_query_descriptors=True,
+                          kwargs_for_descriptors=None
+                          ):
     """
     :param query_dir: directory containing the query images
 
@@ -263,7 +309,8 @@ def get_map_at_several_ks(query_dir, ks,
 
         bbdd_descriptors = get_descriptors_given_query_dir(bd_desc if "text" in descriptors else descriptors,
                                                            os.path.join("..","bbdd"),
-                                                           recompute_bbdd_descriptors)
+                                                           recompute_bbdd_descriptors,
+                                                           kwargs_for_descriptors=kwargs_for_descriptors)
     except Exception as e:
         print(" **************** Exception ocurred while getting the bbdd descriptors **************** ")
         print(e)
@@ -281,7 +328,8 @@ def get_map_at_several_ks(query_dir, ks,
                                                             recompute_query_descriptors,
                                                             preprocessing=preprocesses,
                                                             no_bg=no_bg,
-                                                            single_sure=single_sure)
+                                                            single_sure=single_sure,
+                                                            kwargs_for_descriptors=kwargs_for_descriptors)
     except Exception as e:
         print("**************** Exception ocurred while getting the query descriptors **************** ")
         print(e)
@@ -292,11 +340,12 @@ def get_map_at_several_ks(query_dir, ks,
                 pickle.dump(query_descriptors, f)
             print("Written query descriptors at "+os.path.join(query_dir,"descriptors.pkl"))
 
-    predictions = compute_similarity_all_queryset(bbdd_descriptors, query_descriptors, descriptors_sim, k_closest=3)
+    predictions = compute_similarity_all_queryset(bbdd_descriptors, query_descriptors, descriptors_sim, k_closest=max(ks))
 
     if submission:
         with open(os.path.join(query_dir, "result.pkl"), "wb") as f:
             pickle.dump(query_descriptors, f)
+        print("Dumped submission results at ",os.path.join(query_dir, "result.pkl"))
 
     if not submission:
         with open(os.path.join(query_dir,"gt_corresps.pkl") ,'rb') as handle:
@@ -310,6 +359,7 @@ def get_map_at_several_ks(query_dir, ks,
             if len(image_prediction_list) == len(gt_list): # El numero de cuadros detectados es el bueno
                 for single_prediction, single_gt in zip(image_prediction_list, gt_list):
                     for k in ks:
+                        if k > len(single_prediction): print("WARNING !!!!!!!!!!! - k is larger than the predictions")
                         map_[k] += metrics.apk([single_gt], single_prediction, k)
                     number_of_paintings_queried += 1
 
@@ -336,16 +386,98 @@ def get_map_at_several_ks(query_dir, ks,
                 print("map@"+str(k)+": "+"%.3f" % m+"\n")
         return map_
 
-if __name__ == "__main__":
+
+
+def color_pipeline():
+    # Solo color
+    get_map_at_several_ks(
+            query_dir=os.path.join("..", "queries", "qsd1_w3"),
+            ks=[1, 5, 10],
+            descriptors={"color": best_color_descriptor,
+                         },
+            descriptors_sim={"color": generic_histogram_similarity,
+                             },
+            preprocesses=[apply_preprocessing],
+            no_bg=True,
+            recompute_bbdd_descriptors=False,
+            recompute_query_descriptors=False,
+            kwargs_for_descriptors={
+                "color": {}
+            }
+    )
+
+def lbp_pipeline():
+    #Solo textura - LBP
     get_map_at_several_ks(
         query_dir=os.path.join("..","queries","qsd1_w3"),
-        ks=[1, 5, 10],
-        descriptors={"text": text_descriptor},
-        descriptors_sim={"text": text_similarity},
+        ks=[1, 5, 10, 20],
+        descriptors={"texture_lbp": lbp_descriptor,
+                     },
+        descriptors_sim={"texture_lbp": generic_histogram_similarity,
+                         },
         preprocesses=None,
-        recompute_bbdd_descriptors=False,
-        recompute_query_descriptors=True
+        no_bg=True,
+        recompute_bbdd_descriptors=True,
+        recompute_query_descriptors=True,
+        kwargs_for_descriptors = {
+            'texture_lbp': dict(n_blocks=5, P=24, R=3)
+        }
     )
+
+def hog_pipeline():
+    #Solo textura - HOG
+    get_map_at_several_ks(
+        query_dir=os.path.join("..","queries","qsd1_w3"),
+        ks=[1, 5, 10, 20],
+        descriptors={"texture_hog": hog_descriptor,
+                     },
+        descriptors_sim={"texture_hog": hog_similarity,
+                         },
+        preprocesses=None,
+        no_bg=True,
+        recompute_bbdd_descriptors=True,
+        recompute_query_descriptors=True,
+        kwargs_for_descriptors = {
+            'texture_hog': {}
+        }
+    )
+
+def text_pipeline():
+    #Solo texto
+    get_map_at_several_ks(
+            query_dir=os.path.join("..", "queries", "qsd1_w3"),
+            ks=[1, 5, 10],
+            descriptors={"text": text_descriptor},
+            descriptors_sim={"text": text_similarity},
+            preprocesses=None,
+            no_bg=True,
+            recompute_bbdd_descriptors=True,
+            recompute_query_descriptors=True
+    )
+
+def color_and_text_pipeline():
+    get_map_at_several_ks(
+            query_dir=os.path.join("..", "queries", "qsd2_w3"),
+            ks=[1, 5, 10],
+            descriptors={"color": best_color_descriptor,
+                         "text" : text_descriptor
+                         },
+            descriptors_sim={"color": generic_histogram_similarity,
+                             "text" : text_similarity
+                             },
+            preprocesses=[apply_preprocessing],
+            recompute_bbdd_descriptors=True,
+            recompute_query_descriptors=True,
+            submission=True
+    )
+
+if __name__ == "__main__":
+    color_and_text_pipeline()
+
+
+
+
+
 
 
 
