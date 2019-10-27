@@ -163,7 +163,7 @@ def best_color_descriptor(image, mask):
 
     return output_histograms
 
-def correlation_best_color_descriptor(descriptor1, descriptor2, distance_method=correlation):
+def similarity_for_histograms(descriptor1, descriptor2, distance_method="correlation"):
     """
     Computes the correlation between both descriptors
     Args:
