@@ -70,11 +70,11 @@ def calc_histogram_1D_luminance_and_2D_chrominance(image, mask):
     """
 
     #Compute histogram 2D
-    hist2D = calc_normalized_histogram(image, mask, [1,2], [256, 256], [0, 256, 0, 256])
+    hist2D = calc_normalized_histogram(image, mask, [1,2], [32, 32], [0, 256, 0, 256])
     #Flatten 2D histogram
     hist2D_flatten = hist2D.flatten()
     #Compute histogram 1D
-    hist1D = calc_normalized_histogram(image, mask, [0], [256], [0, 256])
+    hist1D = calc_normalized_histogram(image, mask, [0], [64], [0, 256])
     #Join and return features
     return np.append(hist2D_flatten, hist1D)
 
