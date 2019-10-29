@@ -1,11 +1,12 @@
 import cv2
 import numpy as np
 
-def harris_corners(image, block_size=2, k_size=3, free_parameter=0.04, threshold=0.01):
+def harris_corners(image, mask = None, block_size=2, k_size=3, free_parameter=0.04, threshold=0.01):
     """
     Obtain the harris corners of the image
     Args:
         - image: image in BGR color space
+        - mask: None or mask with 0's in the pixels that don't have to be taken into account and 1's in the other positions
         - block_size: neighborhood size (for each pixel value block_size*block_size neighbourhood is considered)
         - k_size: Aperture parameter for the Sobel() operator
         - free_parameter: Harris detector free parameter
@@ -22,5 +23,7 @@ def harris_corners(image, block_size=2, k_size=3, free_parameter=0.04, threshold
     dst = cv2.dilate(dst,None)
 
     # Threshold for an optimal value, it may vary depending on the image.
-    mask = dst>threshold*dst.max()
-    return mask.astype(int)
+    mask_corners = dst>threshold*dst.max()
+    if mask is not None:
+        mask_corners = mask_corners * mask
+    return mask_corners.astype(int)
