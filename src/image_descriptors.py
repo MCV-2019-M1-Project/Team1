@@ -129,7 +129,7 @@ def calc_blocks_from_image(image, n_blocks):
             cropped_images.append(cropped_image)
     return cropped_images
 
-def best_color_descriptor(image, mask):
+def best_color_descriptor(image, mask=None):
     """
     Computes best color descriptor
     Args:
