@@ -285,39 +285,42 @@ def get_text_mask_BGR(im):
     return mask
 
 def merge_text_detection_methods(m1_cords, m2_cords, im_w, im_h, dilation):
-    
-    x1, y1, xw1, yh1 = m1_cords
-    x2, y2, xw2, yh2 = m2_cords
-    possible_bbox1 = erase_vertical_rects(x1, y1, xw1-x1, yh1-y1)
-    possible_bbox2 = erase_vertical_rects(x2, y2, xw2-x2, yh2-y2)
-    rects = []
-    rects.append((x1, y1, xw1-x1, yh1-y1))
-    rects.append((x2, y2, xw2-x2, yh2-y2))
-    
-    if possible_bbox1 == False and possible_bbox2 == True:
-        text_box = m2_cords
-    elif possible_bbox2 == False and possible_bbox1 == True:
-        text_box = m1_cords
-    elif possible_bbox2 == True and possible_bbox1 == True:
-        no_contained_rects = erase_inside_regions(rects)
-        if len(no_contained_rects)>1:
-            no_overlapped = erase_overlapped_regions(no_contained_rects, im_w, im_h)
-            if len(no_overlapped)>1: 
-                dil1 = dilation[y1:yh1, x1:xw1]
-                dil2 = dilation[y2:yh2, x2:xw2]
-                if sum(sum(dil1))>sum(sum(dil2)):
-                    text_box = m1_cords
-                elif sum(sum(dil1))<sum(sum(dil2)):
-                    text_box = m2_cords
-            elif len(no_overlapped)==1:
-                x, y, w, h = no_overlapped[0]
+    try:
+        x1, y1, xw1, yh1 = m1_cords
+        x2, y2, xw2, yh2 = m2_cords
+        possible_bbox1 = erase_vertical_rects(x1, y1, xw1-x1, yh1-y1)
+        possible_bbox2 = erase_vertical_rects(x2, y2, xw2-x2, yh2-y2)
+        rects = []
+        rects.append((x1, y1, xw1-x1, yh1-y1))
+        rects.append((x2, y2, xw2-x2, yh2-y2))
+
+        if possible_bbox1 == False and possible_bbox2 == True:
+            text_box = m2_cords
+        elif possible_bbox2 == False and possible_bbox1 == True:
+            text_box = m1_cords
+        elif possible_bbox2 == True and possible_bbox1 == True:
+            no_contained_rects = erase_inside_regions(rects)
+            if len(no_contained_rects)>1:
+                no_overlapped = erase_overlapped_regions(no_contained_rects, im_w, im_h)
+                if len(no_overlapped)>1:
+                    dil1 = dilation[y1:yh1, x1:xw1]
+                    dil2 = dilation[y2:yh2, x2:xw2]
+                    if sum(sum(dil1))>sum(sum(dil2)):
+                        text_box = m1_cords
+                    elif sum(sum(dil1))<sum(sum(dil2)):
+                        text_box = m2_cords
+                elif len(no_overlapped)==1:
+                    x, y, w, h = no_overlapped[0]
+                    text_box = x, y, x+w, y+h
+            elif len(no_contained_rects)==1:
+                x, y, w, h = no_contained_rects[0]
                 text_box = x, y, x+w, y+h
-        elif len(no_contained_rects)==1:
-            x, y, w, h = no_contained_rects[0]
-            text_box = x, y, x+w, y+h
-    elif possible_bbox1 == False and possible_bbox2 == False:
-        text_box = (0,0,0,0)
-    return text_box
+        elif possible_bbox1 == False and possible_bbox2 == False:
+            text_box = (0,0,0,0)
+        return text_box
+    except:
+        text_box = (0, 0, 0, 0)
+        return text_box
 
 def erase_vertical_rects(x, y, w, h):
     if w*0.4>=h:
