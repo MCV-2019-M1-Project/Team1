@@ -6,10 +6,18 @@ import numpy as np
 from matplotlib import pyplot as plt
 import sys
 
-def LBP(image, n_blocks, P, R, method='uniform', mask=None, histogram_size=[255], histogram_ranges=[0,255]):
+def LBP(image, n_blocks, resize_level, P, R, method, histogram_size, histogram_range, mask=None):
     """
     Args:
-        - image: Gray scale image (N x M) array
+        - image (M x N) array: 
+            An image in grayscale
+        - n_blocks (int): 
+            divide the image into N x N blocks, where N is the n_blocks
+        - resize_level (int):
+            - 1 = 64x64
+            - 2 = 128x128
+            - 3 = 256x256
+            - 4 = 512x512
         - P (int): Number of circularly symmetric neighbour set points 
              (quantization of the angular space).
         - R (int): Radius of circle (spatial resolution of the operator).
@@ -28,39 +36,40 @@ def LBP(image, n_blocks, P, R, method='uniform', mask=None, histogram_size=[255]
 
             ‘var’: rotation invariant variance measures of the contrast of local
                 image texture which is rotation but not gray scale invariant.
-        - mask: matrix with the same same as input image. By default will use a matrix of one's with
-                the same input image size. Should be np.uint8 TYPE!
         - histogram_size [int]: list with a single integer value, specify the size of the histogram
         - histogram_ranges [int, int]: list with a pair of ints, specify the range of the histogram
+        - mask: matrix with the same same as input image.
         Returns:
             LBP histogram
     """
-    def LBP(image, mask, P, R, method, hist_size, ranges):
-        # An example how to uyse the local binary pattern
-        # https://scikit-image.org/docs/dev/auto_examples/features_detection/plot_local_binary_pattern.html
 
-        # Convert the output into an array of float 32
-        lbp = np.float32(feature.local_binary_pattern(image, P, R, method))
-        
-        # Calc the normalized histogram of the LBP feature
-        return calc_normalized_histogram(image, mask, [0], hist_size, ranges)
+    if mask is not None:
+        indices = np.where(mask != [0])
+        if(indices[0].size != 0 and indices[1].size !=0):
+            image = image[min(indices[0]):max(indices[0]),min(indices[1]):max(indices[1])]
+            mask = mask[min(indices[0]):max(indices[0]),min(indices[1]):max(indices[1])]
+        mask = mask.astype('uint8')
+        image = cv2.bitwise_and(image, image, mask=mask)
+
+    if resize_level not in [1,2,3,4]:
+        raise NotImplementedError
+
+    if resize_level == 1:
+        resized_image = cv2.resize(image, (64,64))
+    elif resize_level == 2:
+        resized_image = cv2.resize(image, (128,128))
+    elif resize_level == 3:
+        resized_image = cv2.resize(image, (256,256))
+    else:
+        resized_image = cv2.resize(image, (512,512))
+
+    image_blocks = calc_blocks_from_image(resized_image, n_blocks)
     
-    # Get the image blocks
-    image_blocks = calc_blocks_from_image(image, n_blocks)
-
-    if mask is None:
-        mask = np.ones(image.shape, np.uint8)
-
-    # Get the mask blocks
-    mask_blocks = calc_blocks_from_image(mask, n_blocks)
-    
-    image_histogram = None
-    for image_block, mask_block in zip(image_blocks, mask_blocks):
-        block_histogram = LBP(image_block, mask_block, P, R, method, histogram_size, histogram_ranges)
-        if image_histogram is not None:
-            image_histogram = np.concatenate((block_histogram, image_histogram))
-        else:
-            image_histogram = block_histogram
+    image_histogram = []
+    for image_block in image_blocks:
+        block_lbp = np.float32(feature.local_binary_pattern(image_block, P, R, method))
+        block_histogram = calc_normalized_histogram(block_lbp, None, [0], histogram_size, histogram_range)
+        image_histogram.extend(block_histogram)
     
     return image_histogram
 
