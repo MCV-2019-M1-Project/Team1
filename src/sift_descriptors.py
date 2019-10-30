@@ -1,6 +1,6 @@
 import cv2
 import matplotlib.pyplot as plt
-
+from image_descriptors import similarity_for_descriptors
 
 def SIFT_method(gray_img, kp=[], plot_results=False):
     """
@@ -26,18 +26,33 @@ def SIFT_method(gray_img, kp=[], plot_results=False):
         plt.imshow(img)
     return keypoints, descriptors
 
-# def SIFT_descriptors_matcher(des1, des2):
-#     ### BFMatcher with default params
-#     bf = cv2.BFMatcher()
-    
-#     matches = bf.knnMatch(des1,des2,k=2)
 
-#         # Apply ratio test
-#     good = []
-#     for m,n in matches:
-#         if m.distance < 0.75*n.distance:
-#             good.append([m])
-#     return good
+def SIFT_descriptors_matcher(des1, des2, norm_type=cv2.NORM_L2, thres_dist = 90):
+    """
+    Computes the macthes between the descriptors of two images 
+    - des1, des2: descriptors of img 1 and img 2 
+    - norm_type: norm type to compute the matches
+    - thres_dist: threshold distance to select best matches
+    
+    Returns a list of matches
+    """  
+    #normType   One of NORM_L1, NORM_L2, NORM_HAMMING, NORM_HAMMING2. 
+    #L1 and L2 norms are preferable choices for SIFT and SURF descriptors, 
+    #NORM_HAMMING should be used with ORB, BRISK and BRIEF, 
+    #NORM_HAMMING2 should be used with ORB when WTA_K==3 or 4
+        
+    bf = cv2.BFMatcher(normType=norm_type, crossCheck=False)
+    
+    # Match descriptors.
+    matches = bf.match(des1, des2)
+    # Sort matches in the order of their distance.
+    matches = sorted(matches, key = lambda x:x.distance)
+    
+    good_matches = [m for m in matches if m.distance < thres_dist]  
+
+    return good_matches
+
+
 
 #path = 'D:\\Users\\USUARIO\\Documents\\M1.IntroductionToHumanAndVC\\M1.P4\\qsd1_w4\\qsd1_w4\\00024.jpg'
 #db_path = 'D:\\Users\\USUARIO\\Documents\\M1.IntroductionToHumanAndVC\\Team1\\bbdd\\bbdd_00190.jpg'
@@ -47,5 +62,5 @@ def SIFT_method(gray_img, kp=[], plot_results=False):
 #kp1, desc1 = SIFT_method(gray_q)
 #kp2, desc2 = SIFT_method(gray_db)
 #
-#match_rate = SIFT_descriptors_matcher(desc1, desc2)
+#match_rate = SIFT_descriptors_matcher(desc1, desc2, norm_type=cv2.NORM_L2)
 #print(len(match_rate))
