@@ -2,7 +2,7 @@ import cv2
 import matplotlib.pyplot as plt
 from image_descriptors import similarity_for_descriptors
 
-def SIFT_method(gray_img, kp=[], plot_results=False):
+def SIFT_method(gray_img, kp=None, plot_results=False):
     """
     Computes SIFT descriptors and find keypoints if necessary.
     - Input:    gray_img: img where we want to find descriptors
@@ -13,7 +13,7 @@ def SIFT_method(gray_img, kp=[], plot_results=False):
     #Construct SIFT
     sift = cv2.xfeatures2d.SIFT_create()
 
-    if kp:
+    if kp is not None:
         #if we have found the keypoints
         keypoints, descriptors = sift.compute(gray_img, kp) 
     else:
