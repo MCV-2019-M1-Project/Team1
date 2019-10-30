@@ -12,7 +12,7 @@ from denoising import remove_salt_and_pepper_noise
 from texture_descriptors import LBP, HOG, DCT
 from image_descriptors import similarity_for_descriptors, best_color_descriptor
 from text_detector import get_text_mask_BGR
-
+from sift_descriptors import SIFT_descriptors_matcher, SIFT_method
 
 #TODO #1: Validar background_removal y text_bounding_box detection
 
@@ -122,11 +122,14 @@ def color_descriptor(image, **kwargs):
 ## KEYPOINTS DESCRIPTORS #################
 
 def keypoints_descriptor(image, **kwargs):
-    return []
+    return SIFT_method(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), **kwargs)
 
 def keypoints_similarity(desc1, desc2):
-    number_of_matches = 0
-    return number_of_matches
+    """
+    Similarity is based in the number of matches
+    """
+    num_matches = len(SIFT_descriptors_matcher(desc1, desc2, thres_dist=MIN_DIST_TO_BE_MATCH))
+    return num_matches
 
 #########################
 
@@ -554,13 +557,14 @@ def keypoints_pipeline():
             descriptors_sim={"keypoints": keypoints_similarity,
                              },
             preprocesses=True,
-            recompute_bbdd_descriptors=False,
-            recompute_query_descriptors=False,
+            recompute_bbdd_descriptors=True,
+            recompute_query_descriptors=True,
             kwargs_for_descriptors={},
-            similarity_threshold=1
+            similarity_threshold=5
     )
 
 if __name__ == "__main__":
+    MIN_DIST_TO_BE_MATCH = 90
     keypoints_pipeline()
     #color_and_text_pipeline()
     #lbp_and_color_pipeline()

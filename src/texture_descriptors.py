@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import sys
 
-def LBP(image, n_blocks, resize_level, P, R, method, histogram_size, histogram_range, mask=None):
+def LBP(image, n_blocks, resize_level,  method, histogram_size, histogram_range, P=8, R=3, mask=None):
     """
     Args:
         - image (M x N) array: 
