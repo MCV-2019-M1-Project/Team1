@@ -6,9 +6,9 @@ def SIFT_method(gray_img, kp=[], plot_results=False):
     """
     Computes SIFT descriptors and find keypoints if necessary.
     - Input:    gray_img: img where we want to find descriptors
-                kp: keypoints if were computed before with another method
+                kp: keypoints (keypoint object) if were computed before with another method
     - Output:   Keypoints: the kp of the img
-                descriptors: list of descriptors of the img
+                descriptors: array of SIFT descriptors of the img -->size =(#keypoints, 128)
     """
     #Construct SIFT
     sift = cv2.xfeatures2d.SIFT_create()
@@ -26,18 +26,18 @@ def SIFT_method(gray_img, kp=[], plot_results=False):
         plt.imshow(img)
     return keypoints, descriptors
 
-def SIFT_descriptors_matcher(des1, des2):
-    ### BFMatcher with default params
-    bf = cv2.BFMatcher()
+# def SIFT_descriptors_matcher(des1, des2):
+#     ### BFMatcher with default params
+#     bf = cv2.BFMatcher()
     
-    matches = bf.knnMatch(des1,des2,k=2)
+#     matches = bf.knnMatch(des1,des2,k=2)
 
-        # Apply ratio test
-    good = []
-    for m,n in matches:
-        if m.distance < 0.75*n.distance:
-            good.append([m])
-    return good
+#         # Apply ratio test
+#     good = []
+#     for m,n in matches:
+#         if m.distance < 0.75*n.distance:
+#             good.append([m])
+#     return good
 
 #path = 'D:\\Users\\USUARIO\\Documents\\M1.IntroductionToHumanAndVC\\M1.P4\\qsd1_w4\\qsd1_w4\\00024.jpg'
 #db_path = 'D:\\Users\\USUARIO\\Documents\\M1.IntroductionToHumanAndVC\\Team1\\bbdd\\bbdd_00190.jpg'
