@@ -1,6 +1,9 @@
 import numpy as np
 from scipy.spatial import distance
-from cv2 import cv2
+try:
+    import cv2
+except ImportError:
+    import cv2.cv2 as cv2
 
 
 def euclidean(histogram1, histogram2):

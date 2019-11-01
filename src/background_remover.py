@@ -1,4 +1,7 @@
-import cv2.cv2 as cv2
+try:
+    import cv2
+except ImportError:
+    import cv2.cv2 as cv2
 import numpy as np
 from scipy.signal import find_peaks
 from scipy.ndimage import gaussian_filter1d

@@ -1,4 +1,7 @@
-import cv2
+try:
+    import cv2
+except ImportError:
+    import cv2.cv2 as cv2
 import pytesseract
 import matplotlib.pyplot as plt
 from text_detector import detect_text_box

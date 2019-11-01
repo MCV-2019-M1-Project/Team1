@@ -1,6 +1,9 @@
 import math
 import numpy as np
-import cv2
+try:
+    import cv2
+except ImportError:
+    import cv2.cv2 as cv2
 from skimage import data, feature, exposure
 import matplotlib.pyplot as plt
 

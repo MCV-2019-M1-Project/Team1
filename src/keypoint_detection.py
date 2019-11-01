@@ -1,4 +1,8 @@
-import cv2
+try:
+    import cv2
+except ImportError:
+    import cv2.cv2 as cv2
+
 import numpy as np
 
 def harris_corners(image, mask = None, block_size=2, k_size=3, free_parameter=0.04, threshold=0.01):

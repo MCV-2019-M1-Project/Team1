@@ -1,7 +1,10 @@
 from skimage import feature
 from scipy.stats import itemfreq
 from image_descriptors import calc_blocks_from_image, calc_normalized_histogram
-from cv2 import cv2
+try:
+    import cv2
+except ImportError:
+    import cv2.cv2 as cv2
 import numpy as np
 from matplotlib import pyplot as plt
 import sys

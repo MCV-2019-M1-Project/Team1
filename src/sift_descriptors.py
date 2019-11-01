@@ -1,4 +1,7 @@
-import cv2
+try:
+    import cv2
+except ImportError:
+    import cv2.cv2 as cv2
 import matplotlib.pyplot as plt
 from image_descriptors import similarity_for_descriptors
 
