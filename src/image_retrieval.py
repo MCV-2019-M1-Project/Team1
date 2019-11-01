@@ -12,7 +12,7 @@ from text_recognition import text_recognition
 from background_remover import remove_background, get_background_and_text_mask
 import re
 from denoising import remove_salt_and_pepper_noise
-from texture_descriptors import LBP, HOG, DCT
+from texture_descriptors import LBP, HOG
 from image_descriptors import similarity_for_descriptors, best_color_descriptor
 from text_detector import get_text_mask_BGR
 from sift_descriptors import SIFT_descriptors_matcher, SIFT_method
@@ -435,7 +435,7 @@ def old_pipelines():
     def lbp_pipeline():
         #Solo textura - LBP
         get_map_at_several_ks(
-            query_dir=os.path.join("..","queries","qsd1_w3"),
+            query_dir=os.path.join("..","old_queries","qsd1_w3"),
             ks=[1, 5, 10, 20],
             descriptors={"texture_lbp": lbp_descriptor,
                          },
@@ -453,7 +453,7 @@ def old_pipelines():
     def lbp_and_text_pipeline():
 
         get_map_at_several_ks(
-            query_dir=os.path.join("..","queries","qsd1_w3"),
+            query_dir=os.path.join("..","old_queries","qsd1_w3"),
             ks=[1, 5, 10, 20],
             descriptors={"texture_lbp": lbp_descriptor, "text": text_descriptor
                          },
@@ -471,7 +471,7 @@ def old_pipelines():
     def lbp_and_text_and_color_pipeline():
 
         get_map_at_several_ks(
-            query_dir=os.path.join("..","queries","qsd1_w3"),
+            query_dir=os.path.join("..","old_queries","qsd1_w3"),
             ks=[1, 5, 10, 20],
             descriptors={"texture_lbp": lbp_descriptor, "text": text_descriptor, "color": best_color_descriptor
                          },
@@ -489,7 +489,7 @@ def old_pipelines():
     def lbp_and_color_pipeline():
 
         get_map_at_several_ks(
-            query_dir=os.path.join("..","queries","qsd1_w3"),
+            query_dir=os.path.join("..","old_queries","qsd1_w3"),
             ks=[1, 5, 10, 20],
             descriptors={"texture_lbp": lbp_descriptor,  "color": best_color_descriptor
                          },
@@ -507,7 +507,7 @@ def old_pipelines():
     def hog_pipeline():
         #Solo textura - HOG
         get_map_at_several_ks(
-            query_dir=os.path.join("..","queries","qsd1_w3"),
+            query_dir=os.path.join("..","old_queries","qsd1_w3"),
             ks=[1, 5, 10, 20],
             descriptors={"texture_hog": hog_descriptor,
                          },
@@ -549,6 +549,8 @@ def old_pipelines():
                 recompute_bbdd_descriptors=False,
                 recompute_query_descriptors=True,
         )
+    
+    hog_pipeline()
 
 def keypoints_pipeline():
     # Solo keypoints
@@ -568,6 +570,6 @@ def keypoints_pipeline():
 
 if __name__ == "__main__":
     MIN_DIST_TO_BE_MATCH = 90
-    keypoints_pipeline()
+    old_pipelines()
     #color_and_text_pipeline()
     #lbp_and_color_pipeline()
