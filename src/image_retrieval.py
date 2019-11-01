@@ -12,7 +12,7 @@ from text_recognition import text_recognition
 from background_remover import remove_background, get_background_and_text_mask
 import re
 from denoising import remove_salt_and_pepper_noise
-from texture_descriptors import LBP, HOG
+from texture_descriptors import LBP, HOG, local_HOG
 from image_descriptors import similarity_for_descriptors, best_color_descriptor
 from text_detector import get_text_mask_BGR
 from sift_descriptors import SIFT_descriptors_matcher, SIFT_method
@@ -109,7 +109,7 @@ def hog_similarity(desc1, desc2):
     return similarity_for_descriptors(desc1, desc2, distance_method="euclidean")
 
 def hog_descriptor(image, **kwargs):
-    return HOG(image)
+    return local_HOG(image)
 
 
 ### COLOR DESCRIPTORS ####################
@@ -429,7 +429,7 @@ def color_pipeline():
             }
     )
 
-def hog_pipeline():
+def local_hog_pipeline():
     #Solo textura - HOG
     get_map_at_several_ks(
         query_dir=os.path.join("..","queries","qsd1_w4"),
@@ -566,6 +566,6 @@ def keypoints_pipeline():
 
 if __name__ == "__main__":
     MIN_DIST_TO_BE_MATCH = 90
-    hog_pipeline()
+    local_hog_pipeline()
     #color_and_text_pipeline()
     #lbp_and_color_pipeline()

@@ -1,5 +1,6 @@
 from skimage import feature
 from scipy.stats import itemfreq
+from keypoint_detection import harris_corners
 from image_descriptors import calc_blocks_from_image, calc_normalized_histogram
 try:
     import cv2
@@ -7,6 +8,7 @@ except ImportError:
     import cv2.cv2 as cv2
 import numpy as np
 from matplotlib import pyplot as plt
+from distance import euclidean
 import sys
 
 def LBP(image, n_blocks=8, resize_level=2, P=8, R=2, method='uniform', histogram_size=[64], histogram_range=[0,255], mask=None):
@@ -76,13 +78,75 @@ def LBP(image, n_blocks=8, resize_level=2, P=8, R=2, method='uniform', histogram
 
     return image_histogram
 
-def HOG(image, mask=None, block_size=20, resize_level=2):
+def local_HOG(image, n_blocks=5, TH_ONES=5, resize_level=2):
     """
     Args:
         - image (M x N) array:
             An image in grayscale
         - n_blocks (int):
-            divide the image into N x N blocks, where N is the n_blocks
+            into how many blocks divide the image
+        - TH_ONES (int):
+            how many ones (keypoints) should have each block
+        - block_size (int):
+            divide the block into N x N blocks, where N is the block_size
+        - resize_level (int):
+            - 1 = 64x64
+            - 2 = 128x128
+            - 3 = 256x256
+            - 4 = 512x512
+    Returns
+    """
+
+    if resize_level == 1:
+        resized_image = cv2.resize(image, (64,64))
+    elif resize_level == 2:
+        resized_image = cv2.resize(image, (128,128))
+    elif resize_level == 3:
+        resized_image = cv2.resize(image, (256,256))
+    else:
+        resized_image = cv2.resize(image, (512,512))
+
+    keypoints_mask = harris_corners(resized_image)
+
+    mask_height, mask_width = keypoints_mask.shape
+    block_height = mask_height/n_blocks
+    block_width = mask_width/n_blocks
+
+    image_blocks = []
+    for y in range(n_blocks):
+        for x in range(n_blocks):
+            mask_block = keypoints_mask[int(y*block_height):int((y + 1)*block_height), int(x*block_width):int((x + 1)*block_width)]
+            num_of_ones = sum(map(sum, mask_block))
+            if num_of_ones > TH_ONES:
+                image_block = resized_image[int(y*block_height):int((y + 1)*block_height), int(x*block_width):int((x + 1)*block_width)]
+                image_blocks.append(image_block)
+            else:
+                # to do an imshow how it looks:)
+                # resized_image[int(y*block_height):int((y + 1)*block_height), int(x*block_width):int((x + 1)*block_width)] = 0
+                image_block = resized_image[int(y*block_height):int((y + 1)*block_height), int(x*block_width):int((x + 1)*block_width)]
+                image_block.fill(0)
+                image_blocks.append(image_block)
+
+    # uncomment for debug
+    #cv2.imshow(' ', resized_image)
+    #cv2.waitKey(0)
+
+    histograms = []
+    for image_block in image_blocks:
+        # Compute FOG feature
+        fd = feature.hog(image_block, orientations=8, pixels_per_cell=(5, 5), cells_per_block=(5, 5), visualize=False, multichannel=True, feature_vector=True)
+        histogram = np.expand_dims(fd, axis=1).tolist()
+        histograms.extend(histogram)
+
+    return histograms
+
+def HOG(image, mask=None, block_size=10, resize_level=2):
+    """
+    Args:
+        - image (M x N) array:
+            An image in grayscale
+        - block_size (int):
+            divide the image into N x N blocks, where N is the block_size
         - resize_level (int):
             - 1 = 64x64
             - 2 = 128x128
@@ -114,11 +178,20 @@ def HOG(image, mask=None, block_size=20, resize_level=2):
         resized_image = cv2.resize(image, (512,512))
 
     # Compute FOG feature
-    fd = feature.hog(resized_image, orientations=8, pixels_per_cell=(block_size, block_size), cells_per_block=(4, 4), visualize=False, multichannel=True, feature_vector=True)
+    fd = feature.hog(resized_image, orientations=8, pixels_per_cell=(block_size, block_size), cells_per_block=(5, 5), visualize=False, multichannel=True, feature_vector=True)
 
     return np.expand_dims(fd, axis=1).tolist()
 
 def ORB(image, keypoint_mask=None, keypoint_diameter=7):
+    """
+    Obtains the orb descriptors of the keypoints in image
+    Args:
+        - image: image in BGR color space
+        - mask: None or mask with all the keypoints set at 1 and the rest at 0
+        - keypoint_diameter: diameter of the keypoint that will be used to compute the descriptor
+    Returns
+        Orb descriptors for given or found keypoints
+    """
     orb = cv2.ORB_create()
     #Obtain keypoints
     if keypoint_mask is None:
@@ -133,7 +206,6 @@ def ORB(image, keypoint_mask=None, keypoint_diameter=7):
     kp, des = orb.compute(image, kp)
     return des
 
-def ORB_comparator(des1, des2):
 
 '''
 #ORB usage example
