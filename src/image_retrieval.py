@@ -101,8 +101,7 @@ def lbp_descriptor(image, **kwargs):
     #mask = get_text_mask_BGR(image)
     #kwargs.update(mask=mask)
     image_in_specific_space = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    resized_image = cv2.resize(image_in_specific_space, (400, 400), interpolation=cv2.INTER_AREA)
-    return LBP(resized_image,
+    return LBP(image_in_specific_space,
                **kwargs
     )
 
@@ -430,6 +429,23 @@ def color_pipeline():
             }
     )
 
+def hog_pipeline():
+    #Solo textura - HOG
+    get_map_at_several_ks(
+        query_dir=os.path.join("..","queries","qsd1_w4"),
+        ks=[1, 5, 10, 20],
+        descriptors={"texture_hog": hog_descriptor,
+                        },
+        descriptors_sim={"texture_hog": hog_similarity,
+                            },
+        preprocesses=True,
+        recompute_bbdd_descriptors=True,
+        recompute_query_descriptors=True,
+        kwargs_for_descriptors = {
+            'texture_hog': {}
+        }
+    )
+
 def old_pipelines():
 
     def lbp_pipeline():
@@ -504,24 +520,6 @@ def old_pipelines():
             }
         )
 
-    def hog_pipeline():
-        #Solo textura - HOG
-        get_map_at_several_ks(
-            query_dir=os.path.join("..","old_queries","qsd1_w3"),
-            ks=[1, 5, 10, 20],
-            descriptors={"texture_hog": hog_descriptor,
-                         },
-            descriptors_sim={"texture_hog": hog_similarity,
-                             },
-            preprocesses=None,
-            no_bg=True,
-            recompute_bbdd_descriptors=True,
-            recompute_query_descriptors=True,
-            kwargs_for_descriptors = {
-                'texture_hog': {}
-            }
-        )
-
     def text_pipeline():
         #Solo texto
         get_map_at_several_ks(
@@ -549,8 +547,6 @@ def old_pipelines():
                 recompute_bbdd_descriptors=False,
                 recompute_query_descriptors=True,
         )
-    
-    hog_pipeline()
 
 def keypoints_pipeline():
     # Solo keypoints
@@ -570,6 +566,6 @@ def keypoints_pipeline():
 
 if __name__ == "__main__":
     MIN_DIST_TO_BE_MATCH = 90
-    old_pipelines()
+    hog_pipeline()
     #color_and_text_pipeline()
     #lbp_and_color_pipeline()

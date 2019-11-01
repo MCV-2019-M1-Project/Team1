@@ -76,7 +76,7 @@ def LBP(image, n_blocks=8, resize_level=2, P=8, R=2, method='uniform', histogram
     
     return image_histogram
 
-def HOG(image, mask=None, block_size=18, resize_level=2):
+def HOG(image, mask=None, block_size=20, resize_level=2):
     """
     Args:
         - image (M x N) array: 
@@ -114,6 +114,6 @@ def HOG(image, mask=None, block_size=18, resize_level=2):
         resized_image = cv2.resize(image, (512,512))
 
     # Compute FOG feature
-    fd = feature.hog(resized_image, orientations=8, pixels_per_cell=(block_size, block_size), cells_per_block=(2, 2), visualize=False, multichannel=True, feature_vector=True)
+    fd = feature.hog(resized_image, orientations=8, pixels_per_cell=(block_size, block_size), cells_per_block=(4, 4), visualize=False, multichannel=True, feature_vector=True)
 
     return np.expand_dims(fd, axis=1).tolist()
