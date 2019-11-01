@@ -12,16 +12,16 @@ import sys
 def LBP(image, n_blocks=8, resize_level=2, P=8, R=2, method='uniform', histogram_size=[64], histogram_range=[0,255], mask=None):
     """
     Args:
-        - image (M x N) array: 
+        - image (M x N) array:
             An image in grayscale
-        - n_blocks (int): 
+        - n_blocks (int):
             divide the image into N x N blocks, where N is the n_blocks
         - resize_level (int):
             - 1 = 64x64
             - 2 = 128x128
             - 3 = 256x256
             - 4 = 512x512
-        - P (int): Number of circularly symmetric neighbour set points 
+        - P (int): Number of circularly symmetric neighbour set points
              (quantization of the angular space).
         - R (int): Radius of circle (spatial resolution of the operator).
         - method (string): Method to determine the pattern.
@@ -67,31 +67,31 @@ def LBP(image, n_blocks=8, resize_level=2, P=8, R=2, method='uniform', histogram
         resized_image = cv2.resize(image, (512,512))
 
     image_blocks = calc_blocks_from_image(resized_image, n_blocks)
-    
+
     image_histogram = []
     for image_block in image_blocks:
         block_lbp = np.float32(feature.local_binary_pattern(image_block, P, R, method))
         block_histogram = calc_normalized_histogram(block_lbp, None, [0], histogram_size, histogram_range)
         image_histogram.extend(block_histogram)
-    
+
     return image_histogram
 
 def HOG(image, mask=None, block_size=20, resize_level=2):
     """
     Args:
-        - image (M x N) array: 
+        - image (M x N) array:
             An image in grayscale
-        - n_blocks (int): 
+        - n_blocks (int):
             divide the image into N x N blocks, where N is the n_blocks
         - resize_level (int):
             - 1 = 64x64
             - 2 = 128x128
             - 3 = 256x256
             - 4 = 512x512
-        - block_size (int, int) : specify the block size 
+        - block_size (int, int) : specify the block size
     Returns
     """
-    
+
     # Mask preprocessing
     if mask is not None:
         indices = np.where(mask != [0])
@@ -117,3 +117,30 @@ def HOG(image, mask=None, block_size=20, resize_level=2):
     fd = feature.hog(resized_image, orientations=8, pixels_per_cell=(block_size, block_size), cells_per_block=(4, 4), visualize=False, multichannel=True, feature_vector=True)
 
     return np.expand_dims(fd, axis=1).tolist()
+
+def ORB(image, keypoint_mask=None, keypoint_diameter=7):
+    orb = cv2.ORB_create()
+    #Obtain keypoints
+    if keypoint_mask is None:
+        kp = orb.detect(image,None)
+    else:
+        kp = []
+        for i in range(keypoint_mask.shape[0]):
+            for j in range(keypoint_mask.shape[1]):
+                if keypoint_mask[i,j] == 1:
+                    kp.append(cv2.KeyPoint(x=i, y=j, _size=keypoint_diameter))
+    #Obtain descriptors
+    kp, des = orb.compute(image, kp)
+    return des
+
+def ORB_comparator(des1, des2):
+
+'''
+#ORB usage example
+import keypoint_detection as kd
+
+im_bd = cv2.imread('/home/mvila/Documents/MasterCV/M1/project/codi/Team1/bbdd/bbdd_00023.jpg')
+mask = kd.difference_of_gaussians(im_bd)
+mask = np.float32(mask)
+des = ORB(im_bd, mask)
+'''
