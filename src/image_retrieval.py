@@ -12,7 +12,7 @@ from text_recognition import text_recognition
 from background_remover import remove_background, get_background_and_text_mask
 import re
 from denoising import remove_salt_and_pepper_noise
-from texture_descriptors import LBP, HOG, DCT
+from texture_descriptors import LBP, HOG
 from image_descriptors import similarity_for_descriptors, best_color_descriptor
 from text_detector import get_text_mask_BGR
 from sift_descriptors import SIFT_descriptors_matcher, SIFT_method
@@ -101,16 +101,15 @@ def lbp_descriptor(image, **kwargs):
     #mask = get_text_mask_BGR(image)
     #kwargs.update(mask=mask)
     image_in_specific_space = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    resized_image = cv2.resize(image_in_specific_space, (400, 400), interpolation=cv2.INTER_AREA)
-    return LBP(resized_image,
+    return LBP(image_in_specific_space,
                **kwargs
     )
 
 def hog_similarity(desc1, desc2):
     return similarity_for_descriptors(desc1, desc2, distance_method="euclidean")
 
-def hog_descriptor(image, **kwargs):
-    return HOG(image)
+def hog_descriptor(image, **kwargs):    
+    return HOG(image, **kwargs)
 
 
 ### COLOR DESCRIPTORS ####################
