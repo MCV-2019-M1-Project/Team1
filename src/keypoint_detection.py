@@ -33,7 +33,7 @@ def harris_corners(image, mask = None, block_size=2, k_size=3, free_parameter=0.
         mask_corners = mask_corners * mask
     return mask_corners.astype(int)
 
-def difference_of_gaussians(image, mask = None, threshold=2.0, min_sigma=1, max_sigma=50, sigma_ratio=1.6, overlap=0.5):
+def difference_of_gaussians(image, mask = None, threshold=0.5, min_sigma=1, max_sigma=50, sigma_ratio=1.6, overlap=0.5):
     """
     Obtain keypoints of the input image using the difference_of_gaussians method
     Args:

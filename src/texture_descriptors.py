@@ -206,13 +206,38 @@ def ORB(image, keypoint_mask=None, keypoint_diameter=7):
     kp, des = orb.compute(image, kp)
     return des
 
+def similarity_ORB(des1, des2, max_distance_to_consider_match=1.0):
+    '''
+    Compares two local descriptors obtained with ORB(), obtains their matches and
+        computes the mean correlation between matches
+    Args:
+        - desc1: descriptors obtained with ORB() of one image
+        - desc2: descriptors obtained with ORB() of another image
+        - max_distance_to_consider_match: if distance between two local descripts is
+            smaller than max_distance_to_consider_match, the match will be discarded
+    Returns
+        - The number of matches between both descriptors that have a distance between
+            them smaller than max_distance_to_consider_match
+        - The mean correlation of all the matches between both descriptors that have a
+            distance between them smaller than max_distance_to_consider_match
+    '''
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    matches = bf.match(des1,des2)
+    matches = [match for match in matches if match.distance<=max_distance_to_consider_match]
+    n_matches = len(matches)
+    sum_distance = sum(match.distance for match in matches)
+    if sum_distance == 0:
+        mean_cor = 999999
+    else:
+        mean_cor = n_matches / sum_distance
+    return n_matches, mean_cor
 
 '''
 #ORB usage example
 import keypoint_detection as kd
-
 im_bd = cv2.imread('/home/mvila/Documents/MasterCV/M1/project/codi/Team1/bbdd/bbdd_00023.jpg')
 mask = kd.difference_of_gaussians(im_bd)
 mask = np.float32(mask)
 des = ORB(im_bd, mask)
+n,m = similarity_ORB(des, des)
 '''
