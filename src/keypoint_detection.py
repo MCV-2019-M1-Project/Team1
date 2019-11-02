@@ -5,6 +5,7 @@ except ImportError:
 
 import numpy as np
 from skimage import feature
+import math
 
 def harris_corners(image, mask = None, block_size=2, k_size=3, free_parameter=0.04, threshold=0.01):
     """
@@ -59,14 +60,44 @@ def difference_of_gaussians(image, mask = None, threshold=0.5, min_sigma=1, max_
         mask_keypoints = mask_keypoints * mask
     return mask_keypoints.astype(int)
 
-'''
-#Example of usage
+def determinant_of_hessian(image, mask = None, min_sigma=1, max_sigma=30, num_sigma=10, threshold=0.01, overlap=0.5, log_scale=False):
+    """
+    mage2D ndarray
+        Input grayscale image.Blobs can either be light on dark or vice versa.
 
-im_bd = cv2.imread('/home/mvila/Documents/MasterCV/M1/project/codi/Team1/bbdd/bbdd_00023.jpg')
-mask = np.ones((im_bd.shape[0], im_bd.shape[1]))
-m = difference_of_gaussians(im_bd, mask=mask, threshold=0.5)
-m = np.float32(m)
-cv2.imshow('or', m)
-if cv2.waitKey(0) & 0xff == 27:
-    cv2.destroyAllWindows()
-'''
+    min_sigmafloat, optional
+        The minimum standard deviation for Gaussian Kernel used to compute Hessian matrix. Keep this low to detect smaller blobs.
+
+    max_sigmafloat, optional
+        The maximum standard deviation for Gaussian Kernel used to compute Hessian matrix. Keep this high to detect larger blobs.
+
+    num_sigmaint, optional
+        The number of intermediate values of standard deviations to consider between min_sigma and max_sigma.
+
+    thresholdfloat, optional.
+        The absolute lower bound for scale space maxima. Local maxima smaller than thresh are ignored. Reduce this to detect less prominent blobs.
+
+    overlapfloat, optional
+        A value between 0 and 1. If the area of two blobs overlaps by a fraction greater than threshold, the smaller blob is eliminated.
+
+    log_scalebool, optional
+        If set intermediate values of standard deviations are interpolated using a logarithmic scale to the base 10. If not, linear interpolation is used.
+    """
+
+    # Example https://scikit-image.org/docs/dev/auto_examples/features_detection/plot_blob.html#sphx-glr-auto-examples-features-detection-plot-blob-py
+    blobs_doh = feature.blob_doh(image, min_sigma, max_sigma, num_sigma, threshold, overlap, log_scale)
+
+    # generate a keypoint mask
+    mask_keypoints = np.zeros((image.shape[0], image.shape[1]))
+    for keypoint in blobs_doh:
+        mask_keypoints[int(keypoint[0]), int(keypoint[1])] = 1
+    if mask is not None:
+        mask_keypoints = mask_keypoints * mask
+    return mask_keypoints.astype(int)
+    
+
+    """
+    # https://answers.opencv.org/question/24623/how-can-i-convert-vectorpoint2f-to-vectorkeypoint/
+    return [cv2.KeyPoint_convert([coord], radi)[0] for coord, radi in zip(doh_coords, doh_radis)]
+    """
+
