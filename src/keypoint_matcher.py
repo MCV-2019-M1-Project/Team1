@@ -5,7 +5,7 @@ except ImportError:
 
 # https://docs.opencv.org/3.4/dc/dc3/tutorial_py_matcher.html
 
-def BFM(des1, des2, norm_type, max_distance_to_consider_match=1.0):
+def BFM(des1, des2, norm_type, max_distance_to_consider_match=1.0, cross_Check=False):
     '''
     Compares two local descriptors obtained with ORB(), obtains their matches and
         computes the mean correlation between matches
@@ -29,7 +29,7 @@ def BFM(des1, des2, norm_type, max_distance_to_consider_match=1.0):
             distance between them smaller than max_distance_to_consider_match
     '''
 
-    bf = cv2.BFMatcher(norm_type, crossCheck=True)
+    bf = cv2.BFMatcher(norm_type, crossCheck=cross_Check)
     matches = bf.match(des1,des2)
     matches = [match for match in matches if match.distance<=max_distance_to_consider_match]
     n_matches = len(matches)

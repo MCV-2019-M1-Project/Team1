@@ -11,11 +11,13 @@ import numpy as np
 from text_recognition import text_recognition
 from background_remover import remove_background, get_background_and_text_mask
 import re
+from keypoint_matcher import BFM
 from denoising import remove_salt_and_pepper_noise
 from texture_descriptors import LBP, HOG
 from image_descriptors import similarity_for_descriptors, best_color_descriptor
 from text_detector import get_text_mask_BGR
-from sift_descriptors import SIFT_descriptors_matcher, SIFT_method
+from keypoint_descriptors import SIFT
+#from sift_descriptors import SIFT_descriptors_matcher, SIFT_method
 
 #TODO #1: Validar background_removal y text_bounding_box detection
 
@@ -124,13 +126,14 @@ def color_descriptor(image, **kwargs):
 ## KEYPOINTS DESCRIPTORS #################
 
 def keypoints_descriptor(image, **kwargs):
-    return SIFT_method(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), **kwargs)
+    return SIFT(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), **kwargs)
 
 def keypoints_similarity(desc1, desc2):
     """
     Similarity is based in the number of matches
     """
-    num_matches = len(SIFT_descriptors_matcher(desc1, desc2, thres_dist=MIN_DIST_TO_BE_MATCH))
+#    num_matches = len(SIFT_descriptors_matcher(desc1, desc2, thres_dist=MIN_DIST_TO_BE_MATCH))
+    num_matches = len(BFM(desc1, desc2, norm_type =cv2.NORM_L1,max_distance_to_consider_match = MIN_DIST_TO_BE_MATCH))
     return num_matches
 
 #########################
@@ -566,6 +569,7 @@ def keypoints_pipeline():
 
 if __name__ == "__main__":
     MIN_DIST_TO_BE_MATCH = 90
-    HOG_pipeline()
+    keypoints_pipeline()
+#    HOG_pipeline()
     #color_and_text_pipeline()
     #lbp_and_color_pipeline()
