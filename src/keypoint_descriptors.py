@@ -3,6 +3,7 @@ try:
 except ImportError:
     import cv2.cv2 as cv2
 import matplotlib.pyplot as plt
+import sys
 
 def _create_keypoint_mask(keypoints, keypoint_diameter):
     kp = []
@@ -13,7 +14,7 @@ def _create_keypoint_mask(keypoints, keypoint_diameter):
     return kp
 
 
-def SURF(gray_img, keypoints_mask=None, keypoint_diameter=7, resize_image=(128,128)):
+def SURF(gray_img, keypoints_mask=None, keypoint_diameter=7, resize_image=(256,256)):
     """
     Extract descriptors from image using the SURF method.
     Args:

@@ -61,4 +61,5 @@ def FLANN(des1, des2, FLANN_INDEX_KDTREE=0, trees=5, checks=50, K_MATCHES=2, max
         mean_cor = 999999
     else:
         mean_cor = n_matches / sum_distance
+
     return n_matches, mean_cor

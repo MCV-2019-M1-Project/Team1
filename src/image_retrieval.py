@@ -208,7 +208,13 @@ def order_by_similarity(bbdd_descriptors, query_descriptor, descriptors_sim, sim
     for desc_name, desc_obj in query_descriptor.items():
         print("\tComputing similarity for descriptor "+desc_name)
         # De la base de datos, tengo que coger la imagen "i", y dentro de esta SIEMPRE la 0, porque la bbdd solo tiene un cuadro
-        sim_list = [descriptors_sim[desc_name](desc_obj, bbdd_descriptors[i][0][desc_name]) for i in sorted(bbdd_descriptors.keys())]
+        sim_list = []
+        for i in sorted(bbdd_descriptors.keys()):
+            if desc_obj is not None and bbdd_descriptors[i][0][desc_name] is not None:
+                # EL [1] es la MEAN
+                # EL [0] es NUM MATCHES
+                sim_list.append(descriptors_sim[desc_name](desc_obj, bbdd_descriptors[i][0][desc_name])[1])
+        #sim_list = [descriptors_sim[desc_name](desc_obj, bbdd_descriptors[i][0][desc_name]) for i in sorted(bbdd_descriptors.keys())]
         sim_by_desc[desc_name] = sim_list[:]
 
     final_order = merge_similarities(sim_by_desc, similarity_threshold)
@@ -585,7 +591,7 @@ def keypoints_pipeline():
             kwargs_for_descriptors={
                 'SURF' : dict(resize_image=(128,128))
             },
-            similarity_threshold=5
+            similarity_threshold=2
     )
 
 if __name__ == "__main__":
