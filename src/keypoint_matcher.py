@@ -29,7 +29,7 @@ def BFM(des1, des2, norm_type, max_distance_to_consider_match=1.0):
             distance between them smaller than max_distance_to_consider_match
     '''
 
-    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    bf = cv2.BFMatcher(norm_type, crossCheck=True)
     matches = bf.match(des1,des2)
     matches = [match for match in matches if match.distance<=max_distance_to_consider_match]
     n_matches = len(matches)
