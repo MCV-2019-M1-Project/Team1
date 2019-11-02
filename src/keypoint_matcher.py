@@ -1,8 +1,11 @@
-from cv2 import cv2
+try:
+    import cv2
+except ImportError:
+    import cv2.cv2 as cv2
 
 # https://docs.opencv.org/3.4/dc/dc3/tutorial_py_matcher.html
 
-def BFM(des1, des2, max_distance_to_consider_match=1.0):
+def BFM(des1, des2, norm_type, max_distance_to_consider_match=1.0):
     '''
     Compares two local descriptors obtained with ORB(), obtains their matches and
         computes the mean correlation between matches
@@ -11,6 +14,14 @@ def BFM(des1, des2, max_distance_to_consider_match=1.0):
         - desc2: descriptors obtained with ORB() of another image
         - max_distance_to_consider_match: if distance between two local descripts is
             smaller than max_distance_to_consider_match, the match will be discarded
+        - norm_type: 
+            NORM_L1, 
+            NORM_L2, 
+            NORM_HAMMING, 
+            NORM_HAMMING2
+            L1 and L2 norms are preferable choices for SIFT and SURF descriptors, 
+            NORM_HAMMING should be used with ORB, BRISK and BRIEF, NORM_HAMMING2 
+            should be used with ORB when WTA_K==3 or 4 (see ORB::ORB constructor description). 
     Returns
         - The number of matches between both descriptors that have a distance between
             them smaller than max_distance_to_consider_match

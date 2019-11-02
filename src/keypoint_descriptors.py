@@ -1,7 +1,8 @@
-from cv2 import cv2
-from keypoint_detection import (
-    determinant_of_hessian
-)
+try:
+    import cv2
+except ImportError:
+    import cv2.cv2 as cv2
+import matplotlib.pyplot as plt
 
 def _create_keypoint_mask(keypoints, keypoint_diameter):
     kp = []
@@ -12,13 +13,13 @@ def _create_keypoint_mask(keypoints, keypoint_diameter):
     return kp
 
 
-def surf_descriptor(image, keypoints_mask=None, keypoint_diameter=7):
+def SURF(gray_img, keypoints_mask=None, keypoint_diameter=7):
     """
     Extract descriptors from image using the SURF method.
     Args:
-        image (M x N):
+        gray_img (M x N):
             a grayscale image
-        keypoints (M x N):
+        keypoints_mask (M x N):
             image mask
     Returns:
         list of descriptors objects
@@ -27,11 +28,11 @@ def surf_descriptor(image, keypoints_mask=None, keypoint_diameter=7):
     # https://docs.opencv.org/3.4/df/dd2/tutorial_py_surf_intro.html
     surf = cv2.xfeatures2d.SURF_create()
     if keypoints_mask is None:
-        keypoints = surf.detect(image, None)
+        keypoints = surf.detect(gray_img, None)
     else:
         keypoints = _create_keypoint_mask(keypoints_mask, keypoint_diameter)
 
-    _, descriptors = surf.compute(image, keypoints)
+    _, descriptors = surf.compute(gray_img, keypoints)
     return descriptors
 
 def ORB(image, keypoint_mask=None, keypoint_diameter=7):
@@ -53,3 +54,31 @@ def ORB(image, keypoint_mask=None, keypoint_diameter=7):
     #Obtain descriptors
     kp, des = orb.compute(image, kp)
     return des
+
+def SIFT(gray_img, keypoint_mask=None, keypoint_diameter=7, plot_results=False):
+    """
+    Computes SIFT descriptors and find keypoints if necessary.
+    - Input:    
+        gray_img: 
+            img where we want to find descriptors                
+        keypoints_mask (M x N):
+            image mask
+    - Output:   Keypoints: the kp of the img
+                descriptors: array of SIFT descriptors of the img -->size =(#keypoints, 128)
+    """
+    #Construct SIFT
+    sift = cv2.xfeatures2d.SIFT_create()
+
+    if keypoint_mask is None:
+        #If we didn't find the keypoints
+        keypoints, descriptors = sift.detectAndCompute(gray_img, None)
+    else:
+        #if we have found the keypoints
+        keypoints, descriptors = sift.compute(gray_img, keypoint_mask) 
+        
+    if plot_results:
+        img = cv2.drawKeypoints(gray_img, keypoints, None)
+        fig= plt.figure(figsize=(11,15))
+        plt.imshow(img)
+
+    return descriptors
