@@ -94,4 +94,3 @@ def determinant_of_hessian(image, mask = None, min_sigma=1, max_sigma=30, num_si
     if mask is not None:
         mask_keypoints = mask_keypoints * mask
     return mask_keypoints.astype(int)
-

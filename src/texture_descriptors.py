@@ -60,13 +60,13 @@ def LBP(image, n_blocks=8, resize_level=2, P=8, R=2, method='uniform', histogram
         raise NotImplementedError
 
     if resize_level == 1:
-        resized_image = cv2.resize(image, (64,64))
+        resized_image = cv2.resize(image, (64,64), interpolation=cv2.INTER_AREA)
     elif resize_level == 2:
-        resized_image = cv2.resize(image, (128,128))
+        resized_image = cv2.resize(image, (128,128), interpolation=cv2.INTER_AREA)
     elif resize_level == 3:
-        resized_image = cv2.resize(image, (256,256))
+        resized_image = cv2.resize(image, (256,256), interpolation=cv2.INTER_AREA)
     else:
-        resized_image = cv2.resize(image, (512,512))
+        resized_image = cv2.resize(image, (512,512), interpolation=cv2.INTER_AREA)
 
     image_blocks = calc_blocks_from_image(resized_image, n_blocks)
 

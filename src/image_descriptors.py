@@ -1,4 +1,3 @@
-from painting import Painting
 try:
     import cv2
 except ImportError:
@@ -13,37 +12,6 @@ from distance import (
     hellinger,
     correlation
 )
-
-
-def calc_equalize_hist(self, painting):
-    """
-    Do an image processing of contrast adjustment using the image's histogram
-    Args:
-        - painting: a painting instance object
-    Returns
-        An equalized histogram of that painting
-    """
-
-    if painting.color_space not in ['BGR', 'GRAY']:
-        raise ValueError('Error: the implicit image must be on BGR color space')
-    if self._color_space != 'GRAY':
-        im = cv2.cvtColor(painting.img, cv2.COLOR_BGR2GRAY)
-    else:
-        im = painting.img
-
-    return cv2.equalizeHist(im)
-
-def image_filtering(self, ddepth, kernel):
-    """
-    Apply image filtering
-    Args:
-        - ddepth: desired depth of the destination image
-        - kernel: convolution kernel
-    Returns:
-        A the image with filtering
-    """
-
-    return cv2.filter2D(self._img, ddepth, kernel)
 
 def calc_normalized_histogram(image, mask, channel, hist_size=[256], ranges=[0, 256]):
     """

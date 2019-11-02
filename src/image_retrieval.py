@@ -16,7 +16,15 @@ from denoising import remove_salt_and_pepper_noise
 from texture_descriptors import LBP, HOG
 from image_descriptors import similarity_for_descriptors, best_color_descriptor
 from text_detector import get_text_mask_BGR
-from keypoint_descriptors import SIFT
+from keypoint_matcher import (
+    BFM,
+    FLANN
+)
+from keypoint_descriptors import (
+    SIFT,
+    SURF,
+    ORB
+)
 #from sift_descriptors import SIFT_descriptors_matcher, SIFT_method
 
 #TODO #1: Validar background_removal y text_bounding_box detection
@@ -126,15 +134,26 @@ def color_descriptor(image, **kwargs):
 ## KEYPOINTS DESCRIPTORS #################
 
 def keypoints_descriptor(image, **kwargs):
-    return SIFT(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), **kwargs)
+    if KEYPOINTS_DESCRIPTOR_METHOD.upper() == 'SIFT':
+        return SIFT(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), **kwargs)
+    elif KEYPOINTS_DESCRIPTOR_METHOD.upper() == 'SURF':
+        return SURF(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), **kwargs)
+    elif KEYPOINTS_DESCRIPTOR_METHOD.upper() == 'ORB':
+        return ORB(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), **kwargs)
+    else:
+        raise NotImplementedError
 
 def keypoints_similarity(desc1, desc2):
     """
     Similarity is based in the number of matches
     """
-#    num_matches = len(SIFT_descriptors_matcher(desc1, desc2, thres_dist=MIN_DIST_TO_BE_MATCH))
-    num_matches = len(BFM(desc1, desc2, norm_type =cv2.NORM_L1,max_distance_to_consider_match = MIN_DIST_TO_BE_MATCH))
-    return num_matches
+    if KEYPOINTS_MATHCER_METHOD.upper() == 'BFM':
+        return BFM(desc1, desc2, norm_type=cv2.NORM_L1, max_distance_to_consider_match=MIN_DIST_TO_BE_MATCH)
+    elif KEYPOINTS_MATHCER_METHOD.upper() == 'FLANN':
+        return FLANN(desc1, desc2, max_distance_to_consider_match=MIN_DIST_TO_BE_MATCH)
+    else:
+        raise NotImplementedError
+
 
 #########################
 
@@ -563,12 +582,16 @@ def keypoints_pipeline():
             preprocesses=True,
             recompute_bbdd_descriptors=True,
             recompute_query_descriptors=True,
-            kwargs_for_descriptors={},
+            kwargs_for_descriptors={
+                'SURF' : dict(resize_image=(128,128))
+            },
             similarity_threshold=5
     )
 
 if __name__ == "__main__":
     MIN_DIST_TO_BE_MATCH = 90
+    KEYPOINTS_MATHCER_METHOD = 'FLANN'
+    KEYPOINTS_DESCRIPTOR_METHOD = 'surf'
     keypoints_pipeline()
 #    HOG_pipeline()
     #color_and_text_pipeline()

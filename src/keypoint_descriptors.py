@@ -13,7 +13,7 @@ def _create_keypoint_mask(keypoints, keypoint_diameter):
     return kp
 
 
-def SURF(gray_img, keypoints_mask=None, keypoint_diameter=7):
+def SURF(gray_img, keypoints_mask=None, keypoint_diameter=7, resize_image=(128,128)):
     """
     Extract descriptors from image using the SURF method.
     Args:
@@ -24,6 +24,8 @@ def SURF(gray_img, keypoints_mask=None, keypoint_diameter=7):
     Returns:
         list of descriptors objects
     """
+
+    gray_img = cv2.resize(gray_img, resize_image, interpolation=cv2.INTER_AREA)
 
     # https://docs.opencv.org/3.4/df/dd2/tutorial_py_surf_intro.html
     surf = cv2.xfeatures2d.SURF_create()
