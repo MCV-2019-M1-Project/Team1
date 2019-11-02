@@ -30,13 +30,13 @@ def BFM(des1, des2, max_distance_to_consider_match=1.0):
     return n_matches, mean_cor
 
 
-def FLANN(des1, des2, FLANN_INDEX_KDTREE=1, trees=5, checks=50, k=2, max_distance_to_consider_match=1.0):    
+def FLANN(des1, des2, FLANN_INDEX_KDTREE=1, trees=5, checks=50, K_MATCHES=2, max_distance_to_consider_match=1.0):    
     FLANN_INDEX_KDTREE = 1
     index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
     search_params = dict(checks=50)   # or pass empty dictionary
 
     flann = cv2.FlannBasedMatcher(index_params,search_params)
-    matches = flann.knnMatch(des1,des2,k=2)
+    matches = flann.knnMatch(des1,des2,K_MATCHES=2)
     
     # Apply ratio test SEE THE TUTORIAL ON THE TOP OF THIS FILE TO SEE WHAT IT DO
     good_matches = []

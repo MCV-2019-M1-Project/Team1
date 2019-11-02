@@ -94,10 +94,4 @@ def determinant_of_hessian(image, mask = None, min_sigma=1, max_sigma=30, num_si
     if mask is not None:
         mask_keypoints = mask_keypoints * mask
     return mask_keypoints.astype(int)
-    
-
-    """
-    # https://answers.opencv.org/question/24623/how-can-i-convert-vectorpoint2f-to-vectorkeypoint/
-    return [cv2.KeyPoint_convert([coord], radi)[0] for coord, radi in zip(doh_coords, doh_radis)]
-    """
 

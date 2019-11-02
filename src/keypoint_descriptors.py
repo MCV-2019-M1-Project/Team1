@@ -18,7 +18,7 @@ def surf_descriptor(image, keypoints_mask=None, keypoint_diameter=7):
     Args:
         image (M x N):
             a grayscale image
-        mask (M x N):
+        keypoints (M x N):
             image mask
     Returns:
         list of descriptors objects
@@ -27,11 +27,11 @@ def surf_descriptor(image, keypoints_mask=None, keypoint_diameter=7):
     # https://docs.opencv.org/3.4/df/dd2/tutorial_py_surf_intro.html
     surf = cv2.xfeatures2d.SURF_create()
     if keypoints_mask is None:
-        kp = surf.detect(image, None)
+        keypoints = surf.detect(image, None)
     else:
-        kp = _create_keypoint_mask(keypoints_mask, keypoint_diameter)
+        keypoints = _create_keypoint_mask(keypoints_mask, keypoint_diameter)
 
-    _, descriptors = surf.detectAndCompute(image, kp)
+    _, descriptors = surf.compute(image, keypoints)
     return descriptors
 
 def ORB(image, keypoint_mask=None, keypoint_diameter=7):
