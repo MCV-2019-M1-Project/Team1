@@ -148,7 +148,7 @@ def keypoints_similarity(desc1, desc2):
     Similarity is based in the number of matches
     """
     if KEYPOINTS_MATHCER_METHOD.upper() == 'BFM':
-        return BFM(desc1, desc2, norm_type=cv2.NORM_L1, max_distance_to_consider_match=MIN_DIST_TO_BE_MATCH)
+        return BFM(desc1, desc2, norm_type=cv2.NORM_L2, max_distance_to_consider_match=MIN_DIST_TO_BE_MATCH)
     elif KEYPOINTS_MATHCER_METHOD.upper() == 'FLANN':
         return FLANN(desc1, desc2, max_distance_to_consider_match=MIN_DIST_TO_BE_MATCH)
     else:
@@ -595,9 +595,9 @@ def keypoints_pipeline():
     )
 
 if __name__ == "__main__":
-    MIN_DIST_TO_BE_MATCH = 90
-    KEYPOINTS_MATHCER_METHOD = 'FLANN'
-    KEYPOINTS_DESCRIPTOR_METHOD = 'surf'
+    MIN_DIST_TO_BE_MATCH = 350
+    KEYPOINTS_MATHCER_METHOD = 'BFM'
+    KEYPOINTS_DESCRIPTOR_METHOD = 'SIFT'
     keypoints_pipeline()
 #    HOG_pipeline()
     #color_and_text_pipeline()

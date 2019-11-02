@@ -70,7 +70,7 @@ def SIFT(gray_img, keypoint_mask=None, keypoint_diameter=7, plot_results=False):
                 descriptors: array of SIFT descriptors of the img -->size =(#keypoints, 128)
     """
     #Construct SIFT
-    sift = cv2.xfeatures2d.SIFT_create()
+    sift = cv2.xfeatures2d.SIFT_create(nfeatures = 500, nOctaveLayers=4, edgeThreshold=10, sigma=1.4)
 
     if keypoint_mask is None:
         #If we didn't find the keypoints

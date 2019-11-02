@@ -1,4 +1,7 @@
-from cv2 import cv2
+try:
+    import cv2
+except ImportError:
+    import cv2.cv2 as cv2
 import numpy as np
 
 def denoise_image(image, mean_hue, mask):
