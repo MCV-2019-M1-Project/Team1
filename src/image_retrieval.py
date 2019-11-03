@@ -27,6 +27,8 @@ from keypoint_descriptors import (
 )
 #from sift_descriptors import SIFT_descriptors_matcher, SIFT_method
 
+from log_keypoint_detection import compute_blob_keypoints
+
 #TODO #1: Validar background_removal y text_bounding_box detection
 
 #TODO #2: Adaptar la pipeline para que soporte comparacion de keypoints
@@ -111,7 +113,8 @@ def lbp_descriptor(image, **kwargs):
     #mask = get_text_mask_BGR(image)
     #kwargs.update(mask=mask)
     image_in_specific_space = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    return LBP(image_in_specific_space,
+    resized_image = cv2.resize(image_in_specific_space, (400, 400), interpolation=cv2.INTER_AREA)
+    return LBP(resized_image,
                **kwargs
     )
 
@@ -164,7 +167,7 @@ def apply_denoising(im):
 
 def apply_preprocessing(image_filepath, preprocessing, no_bg, single_sure):
     im = cv2.imread(image_filepath)
-    #im = apply_denoising(im)
+    im = apply_denoising(im)
     return [im] if no_bg else remove_background(im, single_sure=single_sure)
 
 def merge_similarities(sim_by_desc, similarity_threshold=None):
@@ -208,13 +211,7 @@ def order_by_similarity(bbdd_descriptors, query_descriptor, descriptors_sim, sim
     for desc_name, desc_obj in query_descriptor.items():
         print("\tComputing similarity for descriptor "+desc_name)
         # De la base de datos, tengo que coger la imagen "i", y dentro de esta SIEMPRE la 0, porque la bbdd solo tiene un cuadro
-        sim_list = []
-        for i in sorted(bbdd_descriptors.keys()):
-            if desc_obj is not None and bbdd_descriptors[i][0][desc_name] is not None:
-                # EL [1] es la MEAN
-                # EL [0] es NUM MATCHES
-                sim_list.append(descriptors_sim[desc_name](desc_obj, bbdd_descriptors[i][0][desc_name])[1])
-        #sim_list = [descriptors_sim[desc_name](desc_obj, bbdd_descriptors[i][0][desc_name]) for i in sorted(bbdd_descriptors.keys())]
+        sim_list = [descriptors_sim[desc_name](desc_obj, bbdd_descriptors[i][0][desc_name]) for i in sorted(bbdd_descriptors.keys())]
         sim_by_desc[desc_name] = sim_list[:]
 
     final_order = merge_similarities(sim_by_desc, similarity_threshold)
@@ -269,9 +266,9 @@ def get_descriptors_given_query_dir(descriptors_definition,
                 ds = pickle.load(handle)
                 return ds
         except FileNotFoundError:
-            pass
+            print("\tNo cached version found. Recomputing...")
 
-    print("\tNo cached version found. Recomputing...")
+    print("\tRecomputing...")
 
     folder_images_paths = [os.path.join(folder, image_filename)
                           for image_filename in
@@ -433,48 +430,51 @@ def get_map_at_several_ks(query_dir, ks,
 
         print()
 
+        print("On dataset "+os.path.split(query_dir)[-1])
+
         # with open(os.path.join(query_dir, "map_at_k"+datetime.datetime.now().isoformat()+".txt"), "w") as f:
         for k, m in sorted(map_.items()):
         #         f.write("map@"+str(k)+": "+"%.3f" % m+"\n")
             print("map@"+str(k)+": "+"%.3f" % m+"\n")
         return map_
 
-def color_pipeline():
-    # Solo color
-    get_map_at_several_ks(
-            query_dir=os.path.join("..", "queries", "qsd1_w4"),
-            ks=[1, 5, 10],
-            descriptors={"color": best_color_descriptor,
-                         },
-            descriptors_sim={"color": generic_histogram_similarity,
-                             },
-            preprocesses=True,
-            no_bg=False,
-            recompute_bbdd_descriptors=False,
-            recompute_query_descriptors=True,
-            kwargs_for_descriptors={
-                "color": {}
-            }
-    )
-
-def HOG_pipeline():
-    #Solo textura - HOG
-    get_map_at_several_ks(
-        query_dir=os.path.join("..","queries","qsd1_w4"),
-        ks=[1, 5, 10, 20],
-        descriptors={"texture_hog": hog_descriptor,
-                        },
-        descriptors_sim={"texture_hog": hog_similarity,
-                            },
-        preprocesses=True,
-        recompute_bbdd_descriptors=True,
-        recompute_query_descriptors=True,
-        kwargs_for_descriptors = {
-            'texture_hog': {}
-        }
-    )
 
 def old_pipelines():
+
+    def color_pipeline():
+        # Solo color
+        get_map_at_several_ks(
+                query_dir=os.path.join("..", "queries", "qsd1_w4"),
+                ks=[1, 5, 10],
+                descriptors={"color": best_color_descriptor,
+                             },
+                descriptors_sim={"color": generic_histogram_similarity,
+                                 },
+                preprocesses=True,
+                no_bg=False,
+                recompute_bbdd_descriptors=False,
+                recompute_query_descriptors=True,
+                kwargs_for_descriptors={
+                    "color": {}
+                }
+        )
+
+    def HOG_pipeline():
+        # Solo textura - HOG
+        get_map_at_several_ks(
+                query_dir=os.path.join("..", "queries", "qsd1_w4"),
+                ks=[1, 5, 10, 20],
+                descriptors={"texture_hog": hog_descriptor,
+                             },
+                descriptors_sim={"texture_hog": hog_similarity,
+                                 },
+                preprocesses=True,
+                recompute_bbdd_descriptors=True,
+                recompute_query_descriptors=True,
+                kwargs_for_descriptors={
+                    'texture_hog': {}
+                }
+        )
 
     def lbp_pipeline():
         #Solo textura - LBP
@@ -548,6 +548,24 @@ def old_pipelines():
             }
         )
 
+    def hog_pipeline():
+        #Solo textura - HOG
+        get_map_at_several_ks(
+            query_dir=os.path.join("..","old_queries","qsd1_w3"),
+            ks=[1, 5, 10, 20],
+            descriptors={"texture_hog": hog_descriptor,
+                         },
+            descriptors_sim={"texture_hog": hog_similarity,
+                             },
+            preprocesses=None,
+            no_bg=True,
+            recompute_bbdd_descriptors=True,
+            recompute_query_descriptors=True,
+            kwargs_for_descriptors = {
+                'texture_hog': {}
+            }
+        )
+
     def text_pipeline():
         #Solo texto
         get_map_at_several_ks(
@@ -589,7 +607,6 @@ def keypoints_pipeline():
             recompute_bbdd_descriptors=True,
             recompute_query_descriptors=True,
             kwargs_for_descriptors={
-                'SURF' : dict(resize_image=(128,128))
             },
             similarity_threshold=2
     )
@@ -599,6 +616,3 @@ if __name__ == "__main__":
     KEYPOINTS_MATHCER_METHOD = 'BFM'
     KEYPOINTS_DESCRIPTOR_METHOD = 'SIFT'
     keypoints_pipeline()
-#    HOG_pipeline()
-    #color_and_text_pipeline()
-    #lbp_and_color_pipeline()
