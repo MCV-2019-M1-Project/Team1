@@ -42,18 +42,29 @@ def BFM(des1, des2, norm_type, max_distance_to_consider_match=1.0, cross_Check=F
     return n_matches, mean_cor
 
 
-def FLANN(des1, des2, FLANN_INDEX_KDTREE=0, trees=5, checks=50, K_MATCHES=2, max_distance_to_consider_match=1.0):    
-    FLANN_INDEX_KDTREE = 1
-    index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
+def FLANN(des1, des2, descriptor='SURF'):
+    if des1 is None or des2 is None:
+        return 0, 0.0
+    
+    if descriptor not in ['SURF', 'ORB', 'SIFT']:
+        raise NotImplementedError
+
+    if descriptor = 'ORB':
+        index_params = dict(algorithm = FLANN_INDEX_LSH, 
+                            table_number = 6,
+                            key_size = 12,
+                            multi_probe_level = 1)
+    else:
+        index_params = dict(algorithm = FLANN_INDEX_KDTREE = 1,
+                            trees = 5)    
     search_params = dict(checks=50)   # or pass empty dictionary
 
     flann = cv2.FlannBasedMatcher(index_params,search_params)
     matches = flann.knnMatch(des1,des2,k=2)
     
-    # Apply ratio test SEE THE TUTORIAL ON THE TOP OF THIS FILE TO SEE WHAT IT DOES
     good_matches = []
     for m,n in matches:
-        if m.distance < max_distance_to_consider_match*n.distance:
+        if m.distance < 0.7*n.distance:
             good_matches.append(m)
         
     n_matches = len(good_matches)

@@ -38,7 +38,7 @@ def SURF(gray_img, keypoints_mask=None, keypoint_diameter=7, resize_image=(256,2
     _, descriptors = surf.compute(gray_img, keypoints)
     return descriptors
 
-def ORB(image, keypoint_mask=None, keypoint_diameter=7):
+def ORB(image, keypoint_mask=None, keypoint_diameter=7, resize_image=(256,256)):
     """
     Obtains the orb descriptors of the keypoints in image
     Args:
@@ -48,6 +48,8 @@ def ORB(image, keypoint_mask=None, keypoint_diameter=7):
     Returns
         Orb descriptors for given or found keypoints
     """
+    
+    image = cv2.resize(image, resize_image, interpolation=cv2.INTER_AREA)
     orb = cv2.ORB_create()
     #Obtain keypoints
     if keypoint_mask is None:

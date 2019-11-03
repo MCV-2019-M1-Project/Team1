@@ -139,7 +139,7 @@ def keypoints_descriptor(image, **kwargs):
     elif KEYPOINTS_DESCRIPTOR_METHOD.upper() == 'SURF':
         return SURF(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), **kwargs)
     elif KEYPOINTS_DESCRIPTOR_METHOD.upper() == 'ORB':
-        return ORB(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), **kwargs)
+        return ORB(image, **kwargs)
     else:
         raise NotImplementedError
 
@@ -150,7 +150,7 @@ def keypoints_similarity(desc1, desc2):
     if KEYPOINTS_MATHCER_METHOD.upper() == 'BFM':
         return BFM(desc1, desc2, norm_type=cv2.NORM_L2, max_distance_to_consider_match=MIN_DIST_TO_BE_MATCH)
     elif KEYPOINTS_MATHCER_METHOD.upper() == 'FLANN':
-        return FLANN(desc1, desc2, max_distance_to_consider_match=MIN_DIST_TO_BE_MATCH)
+        return FLANN(desc1, desc2)
     else:
         raise NotImplementedError
 
@@ -213,7 +213,11 @@ def order_by_similarity(bbdd_descriptors, query_descriptor, descriptors_sim, sim
             if desc_obj is not None and bbdd_descriptors[i][0][desc_name] is not None:
                 # EL [1] es la MEAN
                 # EL [0] es NUM MATCHES
-                sim_list.append(descriptors_sim[desc_name](desc_obj, bbdd_descriptors[i][0][desc_name])[1])
+                sim = descriptors_sim[desc_name](desc_obj, bbdd_descriptors[i][0][desc_name])
+                
+                sim_list.append(sim[1])
+            else:
+                sim_list.append(0.0)
         #sim_list = [descriptors_sim[desc_name](desc_obj, bbdd_descriptors[i][0][desc_name]) for i in sorted(bbdd_descriptors.keys())]
         sim_by_desc[desc_name] = sim_list[:]
 
@@ -588,16 +592,14 @@ def keypoints_pipeline():
             preprocesses=True,
             recompute_bbdd_descriptors=True,
             recompute_query_descriptors=True,
-            kwargs_for_descriptors={
-                'SURF' : dict(resize_image=(128,128))
-            },
+            kwargs_for_descriptors={},
             similarity_threshold=2
     )
 
 if __name__ == "__main__":
     MIN_DIST_TO_BE_MATCH = 350
-    KEYPOINTS_MATHCER_METHOD = 'BFM'
-    KEYPOINTS_DESCRIPTOR_METHOD = 'SIFT'
+    KEYPOINTS_MATHCER_METHOD = 'FLANN'
+    KEYPOINTS_DESCRIPTOR_METHOD = 'SURF'
     keypoints_pipeline()
 #    HOG_pipeline()
     #color_and_text_pipeline()
