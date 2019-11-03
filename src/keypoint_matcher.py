@@ -28,18 +28,20 @@ def BFM(des1, des2, norm_type, max_distance_to_consider_match=1.0, cross_Check=F
         - The mean correlation of all the matches between both descriptors that have a
             distance between them smaller than max_distance_to_consider_match
     '''
-
-    bf = cv2.BFMatcher(norm_type, crossCheck=cross_Check)
-    matches = bf.match(des1,des2)
-    matches = sorted(matches, key = lambda x:x.distance)
-    matches = [match for match in matches if match.distance<=max_distance_to_consider_match]
-    n_matches = len(matches)
-    sum_distance = sum(match.distance for match in matches)
-    if sum_distance == 0:
-        mean_cor = 9999999
+    if des1 is None or des2 is None:
+        return 0, 0.0
     else:
-        mean_cor = n_matches / sum_distance
-    return n_matches
+        bf = cv2.BFMatcher(norm_type, crossCheck=cross_Check)
+        matches = bf.match(des1,des2)
+        matches = sorted(matches, key = lambda x:x.distance)
+        matches = [match for match in matches if match.distance<=max_distance_to_consider_match]
+        n_matches = len(matches)
+        sum_distance = sum(match.distance for match in matches)
+        if sum_distance == 0:
+            mean_cor = 9999999
+        else:
+            mean_cor = n_matches / sum_distance
+        return n_matches
 
 
 def FLANN(des1, des2, descriptor='SURF'):
