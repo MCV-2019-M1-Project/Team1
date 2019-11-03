@@ -50,12 +50,12 @@ def FLANN(des1, des2, descriptor='SURF'):
         raise NotImplementedError
 
     if descriptor == 'ORB':
-        index_params = dict(algorithm = cv2.FLANN_INDEX_LSH, 
+        index_params = dict(algorithm = 1, 
                             table_number = 6,
                             key_size = 12,
                             multi_probe_level = 1)
     else:
-        index_params = dict(algorithm = cv2.FLANN_INDEX_KDTREE,
+        index_params = dict(algorithm = 6,
                             trees = 5)
     search_params = dict(checks=50)   # or pass empty dictionary
 
