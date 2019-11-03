@@ -39,7 +39,7 @@ def BFM(des1, des2, norm_type, max_distance_to_consider_match=1.0, cross_Check=F
         mean_cor = 9999999
     else:
         mean_cor = n_matches / sum_distance
-    return n_matches, mean_cor
+    return n_matches
 
 
 def FLANN(des1, des2, descriptor='SURF'):
@@ -63,9 +63,11 @@ def FLANN(des1, des2, descriptor='SURF'):
     matches = flann.knnMatch(des1,des2,k=2)
     
     good_matches = []
-    for m,n in matches:
-        if m.distance < 0.7*n.distance:
-            good_matches.append(m)
+    for matches_list in matches:
+        if len(matches_list) == 2:
+            m, n = matches_list
+            if m.distance < 0.7*n.distance:
+                good_matches.append(m)
         
     n_matches = len(good_matches)
     sum_distance = sum(match.distance for match in good_matches)
@@ -74,4 +76,4 @@ def FLANN(des1, des2, descriptor='SURF'):
     else:
         mean_cor = n_matches / sum_distance
 
-    return n_matches, mean_cor
+    return n_matches

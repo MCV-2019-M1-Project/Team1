@@ -156,7 +156,7 @@ def keypoints_similarity(desc1, desc2):
     if KEYPOINTS_MATHCER_METHOD.upper() == 'BFM':
         return BFM(desc1, desc2, norm_type=cv2.NORM_L2, max_distance_to_consider_match=MIN_DIST_TO_BE_MATCH)
     elif KEYPOINTS_MATHCER_METHOD.upper() == 'FLANN':
-        return flann_proxy(desc1, desc2, KEYPOINTS_DESCRIPTOR_METHOD.upper())
+        return FLANN(desc1, desc2, KEYPOINTS_DESCRIPTOR_METHOD.upper())
     else:
         raise NotImplementedError
 
@@ -597,7 +597,7 @@ def keypoints_pipeline():
             descriptors_sim={"keypoints": keypoints_similarity,
                              },
             preprocesses=True,
-            recompute_bbdd_descriptors=True,
+            recompute_bbdd_descriptors=False,
             recompute_query_descriptors=True,
             kwargs_for_descriptors={},
             similarity_threshold=30
