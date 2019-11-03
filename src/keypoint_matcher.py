@@ -29,7 +29,7 @@ def BFM(des1, des2, norm_type, max_distance_to_consider_match=1.0, cross_Check=F
             distance between them smaller than max_distance_to_consider_match
     '''
     if des1 is None or des2 is None:
-        return 0, 0.0
+        return 0
     else:
         bf = cv2.BFMatcher(norm_type, crossCheck=cross_Check)
         matches = bf.match(des1,des2)
