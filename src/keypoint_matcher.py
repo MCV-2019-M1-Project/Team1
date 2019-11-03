@@ -46,7 +46,7 @@ def BFM(des1, des2, norm_type, max_distance_to_consider_match=1.0, cross_Check=F
 
 def FLANN(des1, des2, descriptor='SURF'):
     if des1 is None or des2 is None:
-        return 0, 0.0
+        return 0
     
     if descriptor not in ['SURF', 'ORB', 'SIFT']:
         raise NotImplementedError

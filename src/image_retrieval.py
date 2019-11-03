@@ -235,7 +235,6 @@ def compute_similarity_all_queryset(bbdd_descriptors, query_descriptors, descrip
     :param query_descriptors: [im_num: { desc_name: fun(I) -> obj , ... }, ...]
     :param bbdd_descriptors:  [im_num: { desc_name: fun(I) -> obj , ... }, ...]
     :param descriptors_sim: { desc_name: fun(obj, obj) -> sim , ...}
-
     """
     predictions = []
     for query_key in sorted(query_descriptors.keys()): # Itero sobre todas las queries
@@ -337,23 +336,14 @@ def get_map_at_several_ks(query_dir, ks,
                           ):
     """
     :param query_dir: directory containing the query images
-
     :param ks: list containing all the ks for computing the map@k: Example: [1,5,10]
-
     :param descriptors: { desc_name: fun(I) -> obj , ... }
-
     :param descriptors_sim: { desc_name: fun(obj, obj) -> sim , ...}
-
     :param preprocesses: list of functions that take an image and return an image or list of images
-
     :param no_bg: boolean that says if images need de-backgrounding
-
     :param single_sure: boolean that says if the dataset contain only single images
-
     :param submission: boolean that tells if the execution is for submission (no GT)
-
     :param recompute_bbdd_descriptors: tells if descriptors of the bbdd must be recomputed
-
     :return: Diccionario con las K y map@k. Ejemplo: dict(1: 0.6, 3:0.8, 10:0.95)
     """
 
@@ -597,14 +587,14 @@ def keypoints_pipeline():
             descriptors_sim={"keypoints": keypoints_similarity,
                              },
             preprocesses=True,
-            recompute_bbdd_descriptors=False,
+            recompute_bbdd_descriptors=True,
             recompute_query_descriptors=True,
             kwargs_for_descriptors={},
             similarity_threshold=30
     )
 
 if __name__ == "__main__":
-    MIN_DIST_TO_BE_MATCH = 350
-    KEYPOINTS_MATHCER_METHOD = 'FLANN'
-    KEYPOINTS_DESCRIPTOR_METHOD = 'ORB'
+    MIN_DIST_TO_BE_MATCH = 450
+    KEYPOINTS_MATHCER_METHOD = 'BFM'
+    KEYPOINTS_DESCRIPTOR_METHOD = 'SIFT'
     keypoints_pipeline()
