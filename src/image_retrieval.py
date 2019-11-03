@@ -113,8 +113,7 @@ def lbp_descriptor(image, **kwargs):
     #mask = get_text_mask_BGR(image)
     #kwargs.update(mask=mask)
     image_in_specific_space = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    resized_image = cv2.resize(image_in_specific_space, (400, 400), interpolation=cv2.INTER_AREA)
-    return LBP(resized_image,
+    return LBP(image_in_specific_space,
                **kwargs
     )
 
@@ -142,7 +141,7 @@ def keypoints_descriptor(image, **kwargs):
     elif KEYPOINTS_DESCRIPTOR_METHOD.upper() == 'SURF':
         return SURF(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), **kwargs)
     elif KEYPOINTS_DESCRIPTOR_METHOD.upper() == 'ORB':
-        return ORB(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), **kwargs)
+        return ORB(image, **kwargs)
     else:
         raise NotImplementedError
 
@@ -153,7 +152,7 @@ def keypoints_similarity(desc1, desc2):
     if KEYPOINTS_MATHCER_METHOD.upper() == 'BFM':
         return BFM(desc1, desc2, norm_type=cv2.NORM_L2, max_distance_to_consider_match=MIN_DIST_TO_BE_MATCH)
     elif KEYPOINTS_MATHCER_METHOD.upper() == 'FLANN':
-        return FLANN(desc1, desc2, max_distance_to_consider_match=MIN_DIST_TO_BE_MATCH)
+        return FLANN(desc1, desc2)
     else:
         raise NotImplementedError
 
@@ -438,43 +437,42 @@ def get_map_at_several_ks(query_dir, ks,
             print("map@"+str(k)+": "+"%.3f" % m+"\n")
         return map_
 
+def color_pipeline():
+    # Solo color
+    get_map_at_several_ks(
+            query_dir=os.path.join("..", "queries", "qsd1_w4"),
+            ks=[1, 5, 10],
+            descriptors={"color": best_color_descriptor,
+                         },
+            descriptors_sim={"color": generic_histogram_similarity,
+                             },
+            preprocesses=True,
+            no_bg=False,
+            recompute_bbdd_descriptors=False,
+            recompute_query_descriptors=True,
+            kwargs_for_descriptors={
+                "color": {}
+            }
+    )
+
+def HOG_pipeline():
+    #Solo textura - HOG
+    get_map_at_several_ks(
+        query_dir=os.path.join("..","queries","qsd1_w4"),
+        ks=[1, 5, 10, 20],
+        descriptors={"texture_hog": hog_descriptor,
+                        },
+        descriptors_sim={"texture_hog": hog_similarity,
+                            },
+        preprocesses=True,
+        recompute_bbdd_descriptors=True,
+        recompute_query_descriptors=True,
+        kwargs_for_descriptors = {
+            'texture_hog': {}
+        }
+    )
 
 def old_pipelines():
-
-    def color_pipeline():
-        # Solo color
-        get_map_at_several_ks(
-                query_dir=os.path.join("..", "queries", "qsd1_w4"),
-                ks=[1, 5, 10],
-                descriptors={"color": best_color_descriptor,
-                             },
-                descriptors_sim={"color": generic_histogram_similarity,
-                                 },
-                preprocesses=True,
-                no_bg=False,
-                recompute_bbdd_descriptors=False,
-                recompute_query_descriptors=True,
-                kwargs_for_descriptors={
-                    "color": {}
-                }
-        )
-
-    def HOG_pipeline():
-        # Solo textura - HOG
-        get_map_at_several_ks(
-                query_dir=os.path.join("..", "queries", "qsd1_w4"),
-                ks=[1, 5, 10, 20],
-                descriptors={"texture_hog": hog_descriptor,
-                             },
-                descriptors_sim={"texture_hog": hog_similarity,
-                                 },
-                preprocesses=True,
-                recompute_bbdd_descriptors=True,
-                recompute_query_descriptors=True,
-                kwargs_for_descriptors={
-                    'texture_hog': {}
-                }
-        )
 
     def lbp_pipeline():
         #Solo textura - LBP
@@ -548,24 +546,6 @@ def old_pipelines():
             }
         )
 
-    def hog_pipeline():
-        #Solo textura - HOG
-        get_map_at_several_ks(
-            query_dir=os.path.join("..","old_queries","qsd1_w3"),
-            ks=[1, 5, 10, 20],
-            descriptors={"texture_hog": hog_descriptor,
-                         },
-            descriptors_sim={"texture_hog": hog_similarity,
-                             },
-            preprocesses=None,
-            no_bg=True,
-            recompute_bbdd_descriptors=True,
-            recompute_query_descriptors=True,
-            kwargs_for_descriptors = {
-                'texture_hog': {}
-            }
-        )
-
     def text_pipeline():
         #Solo texto
         get_map_at_several_ks(
@@ -607,12 +587,16 @@ def keypoints_pipeline():
             recompute_bbdd_descriptors=True,
             recompute_query_descriptors=True,
             kwargs_for_descriptors={
+                'SURF' : dict(resize_image=(128,128))
             },
             similarity_threshold=2
     )
 
 if __name__ == "__main__":
     MIN_DIST_TO_BE_MATCH = 350
-    KEYPOINTS_MATHCER_METHOD = 'BFM'
-    KEYPOINTS_DESCRIPTOR_METHOD = 'SIFT'
+    KEYPOINTS_MATHCER_METHOD = 'FLANN'
+    KEYPOINTS_DESCRIPTOR_METHOD = 'SURF'
     keypoints_pipeline()
+#    HOG_pipeline()
+    #color_and_text_pipeline()
+    #lbp_and_color_pipeline()
