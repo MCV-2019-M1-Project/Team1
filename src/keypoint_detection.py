@@ -20,10 +20,10 @@ def harris_corners(image, mask = None, block_size=2, k_size=3, free_parameter=0.
     Returns
         Mask with all the corners set at 1 and the rest at 0
     """
-    gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
 
-    gray = np.float32(gray)
-    dst = cv2.cornerHarris(gray,block_size,k_size,free_parameter)
+
+    image = np.float32(image)
+    dst = cv2.cornerHarris(image,block_size,k_size,free_parameter)
 
     #result is dilated for marking the corners, not important
     dst = cv2.dilate(dst,None)
@@ -49,13 +49,13 @@ def difference_of_gaussians(image, mask = None, threshold=0.5, min_sigma=1, max_
     Returns
         Mask with all the keypoints set at 1 and the rest at 0
     """
-    gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
-    keypoints = feature.blob_dog(gray, min_sigma, max_sigma, sigma_ratio, threshold, overlap)
+
+    keypoints = feature.blob_dog(image, min_sigma, max_sigma, sigma_ratio, threshold, overlap)
 
     #Obtain keypoint mask
-    mask_keypoints = np.zeros((gray.shape[0], gray.shape[1]))
+    mask_keypoints = np.zeros((image.shape[0], image.shape[1]))
     for keypoint in keypoints:
-        mask_keypoints[keypoint[0], keypoint[1]] = 1
+        mask_keypoints[int(keypoint[0]), int(keypoint[1])] = 1
     if mask is not None:
         mask_keypoints = mask_keypoints * mask
     return mask_keypoints.astype(int)

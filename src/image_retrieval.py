@@ -594,7 +594,7 @@ def keypoints_pipeline():
     )
 
 if __name__ == "__main__":
-    MIN_DIST_TO_BE_MATCH = 450
+    MIN_DIST_TO_BE_MATCH = 550
     KEYPOINTS_MATHCER_METHOD = 'BFM'
-    KEYPOINTS_DESCRIPTOR_METHOD = 'SIFT'
+    KEYPOINTS_DESCRIPTOR_METHOD = 'SURF'
     keypoints_pipeline()

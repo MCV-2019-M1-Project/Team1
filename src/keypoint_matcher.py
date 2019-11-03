@@ -2,6 +2,7 @@ try:
     import cv2
 except ImportError:
     import cv2.cv2 as cv2
+import sys
 
 # https://docs.opencv.org/3.4/dc/dc3/tutorial_py_matcher.html
 
@@ -30,24 +31,29 @@ def BFM(des1, des2, norm_type, max_distance_to_consider_match=1.0, cross_Check=F
     '''
     if des1 is None or des2 is None:
         return 0
-    else:
-        bf = cv2.BFMatcher(norm_type, crossCheck=cross_Check)
-        matches = bf.match(des1,des2)
-        matches = sorted(matches, key = lambda x:x.distance)
-        matches = [match for match in matches if match.distance<=max_distance_to_consider_match]
-        n_matches = len(matches)
-        sum_distance = sum(match.distance for match in matches)
-        if sum_distance == 0:
-            mean_cor = 9999999
-        else:
-            mean_cor = n_matches / sum_distance
-        return n_matches
-
+       
+    bf = cv2.BFMatcher(cv2.NORM_L1, crossCheck=cross_Check)
+    matches = bf.knnMatch(des1,des2,k=2)
+    
+    good_matches = []
+    print(matches)
+    
+    for matches_list in matches:
+        m = matches_list
+        print(m)
+        m, n = m
+        if m.distance < 0.55*n.distance:
+            good_matches.append(m)
+        
+    return len(good_matches)
 
 def FLANN(des1, des2, descriptor='SURF'):
     if des1 is None or des2 is None:
         return 0
     
+    if len(des1) < 2 or len(des2) < 2:
+        return 0
+
     if descriptor not in ['SURF', 'ORB', 'SIFT']:
         raise NotImplementedError
 
@@ -66,10 +72,9 @@ def FLANN(des1, des2, descriptor='SURF'):
     
     good_matches = []
     for matches_list in matches:
-        if len(matches_list) == 2:
-            m, n = matches_list
-            if m.distance < 0.7*n.distance:
-                good_matches.append(m)
+        m, n = matches_list
+        if m.distance < 0.55*n.distance:
+            good_matches.append(m)
         
     n_matches = len(good_matches)
     sum_distance = sum(match.distance for match in good_matches)

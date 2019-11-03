@@ -3,6 +3,7 @@ try:
 except ImportError:
     import cv2.cv2 as cv2
 import matplotlib.pyplot as plt
+from keypoint_detection import difference_of_gaussians
 import sys
 
 def _create_keypoint_mask(keypoints, keypoint_diameter):
@@ -27,9 +28,11 @@ def SURF(gray_img, keypoints_mask=None, keypoint_diameter=7, resize_image=(256,2
     """
 
     gray_img = cv2.resize(gray_img, resize_image, interpolation=cv2.INTER_AREA)
+    #keypoints_mask = difference_of_gaussians(gray_img)
+    
 
     # https://docs.opencv.org/3.4/df/dd2/tutorial_py_surf_intro.html
-    surf = cv2.xfeatures2d.SURF_create()
+    surf = cv2.xfeatures2d.SURF_create(hessianThreshold=800)
     if keypoints_mask is None:
         keypoints = surf.detect(gray_img, None)
     else:
