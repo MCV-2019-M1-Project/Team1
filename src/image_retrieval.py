@@ -15,7 +15,7 @@ from keypoint_matcher import BFM
 from denoising import remove_salt_and_pepper_noise
 from texture_descriptors import LBP, HOG
 from image_descriptors import similarity_for_descriptors, best_color_descriptor
-from text_detector import get_text_mask_BGR
+from text_detector import get_text_mask_BGR, detect_text_box
 from keypoint_matcher import (
     BFM,
     FLANN
@@ -147,7 +147,7 @@ def keypoints_descriptor(image, **kwargs):
 
 def flann_proxy(*args):
     result = FLANN(*args)
-    return result
+    return result[0] # Only number of matches
 
 def keypoints_similarity(desc1, desc2):
     """
@@ -165,13 +165,21 @@ def keypoints_similarity(desc1, desc2):
 
 ## PREPROCESSING ##########
 
+def tapar_texto(im):
+    "Im es una imagen que no tiene fondo, pero sí tiene texto"
+    tlx, tly, brx, bry = detect_text_box(cv2.cvtColor(im, cv2.COLOR_RGB2GRAY), False)
+    im[tly:bry, tlx:brx, :] = 0
+    return im
+
 def apply_denoising(im):
     return remove_salt_and_pepper_noise(im)
 
 def apply_preprocessing(image_filepath, preprocessing, no_bg, single_sure):
     im = cv2.imread(image_filepath)
     im = apply_denoising(im)
-    return [im] if no_bg else remove_background(im, single_sure=single_sure)
+    im = tapar_texto(im)
+    return [tapar_texto(im)] if no_bg else \
+        [tapar_texto(ima) for ima in remove_background(im, single_sure=single_sure)]
 
 def merge_similarities(sim_by_desc, similarity_threshold=None):
     """
@@ -215,6 +223,7 @@ def order_by_similarity(bbdd_descriptors, query_descriptor, descriptors_sim, sim
         print("\tComputing similarity for descriptor "+desc_name)
         # De la base de datos, tengo que coger la imagen "i", y dentro de esta SIEMPRE la 0, porque la bbdd solo tiene un cuadro
         sim_list = [descriptors_sim[desc_name](desc_obj, bbdd_descriptors[i][0][desc_name]) for i in sorted(bbdd_descriptors.keys())]
+        print("\t\tNum_matches: ", sim_list)
         sim_by_desc[desc_name] = sim_list[:]
 
     final_order = merge_similarities(sim_by_desc, similarity_threshold)
@@ -435,6 +444,8 @@ def get_map_at_several_ks(query_dir, ks,
 
         print("On dataset "+os.path.split(query_dir)[-1])
 
+        print()
+
         for k, m in sorted(map_.items()):
             print("map@"+str(k)+": "+"%.3f" % m+"\n")
         return map_
@@ -589,11 +600,11 @@ def keypoints_pipeline():
             recompute_bbdd_descriptors=True,
             recompute_query_descriptors=True,
             kwargs_for_descriptors={},
-            similarity_threshold=2
+            similarity_threshold=30
     )
 
 if __name__ == "__main__":
     MIN_DIST_TO_BE_MATCH = 350
     KEYPOINTS_MATHCER_METHOD = 'FLANN'
-    KEYPOINTS_DESCRIPTOR_METHOD = 'SIFT'
+    KEYPOINTS_DESCRIPTOR_METHOD = 'ORB'
     keypoints_pipeline()

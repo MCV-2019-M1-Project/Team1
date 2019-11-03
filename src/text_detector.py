@@ -51,9 +51,9 @@ def morphological_processing(gray_im, thr, blur_method, post_thresholding):
 
 
     #find contours of the connected components in the binarized image
-    # im2, cont, hierarchy = cv2.findContours(processed_im, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE) PETA!!!!!!!!!
+    im2, cont, hierarchy = cv2.findContours(processed_im, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     # https://stackoverflow.com/questions/54734538/opencv-assertion-failed-215assertion-failed-npoints-0-depth-cv-32
-    cont, _ = cv2.findContours(processed_im, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    #cont, _ = cv2.findContours(processed_im, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
     rgb = cv2.cvtColor(gray_im, cv2.COLOR_GRAY2RGB)
 

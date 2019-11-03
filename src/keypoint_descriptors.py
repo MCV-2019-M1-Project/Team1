@@ -79,7 +79,7 @@ def SIFT(gray_img, keypoint_mask=None, keypoint_diameter=7, plot_results=False):
         keypoints, descriptors = sift.detectAndCompute(gray_img, None)
     else:
         #if we have found the keypoints
-        keypoints, descriptors = sift.compute(gray_img, keypoint_mask) 
+        keypoints, descriptors = sift.compute(gray_img, keypoint_mask)
         
     if plot_results:
         img = cv2.drawKeypoints(gray_img, keypoints, None)
