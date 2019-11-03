@@ -145,6 +145,10 @@ def keypoints_descriptor(image, **kwargs):
     else:
         raise NotImplementedError
 
+def flann_proxy(*args):
+    result = FLANN(*args)
+    return result
+
 def keypoints_similarity(desc1, desc2):
     """
     Similarity is based in the number of matches
@@ -152,7 +156,7 @@ def keypoints_similarity(desc1, desc2):
     if KEYPOINTS_MATHCER_METHOD.upper() == 'BFM':
         return BFM(desc1, desc2, norm_type=cv2.NORM_L2, max_distance_to_consider_match=MIN_DIST_TO_BE_MATCH)
     elif KEYPOINTS_MATHCER_METHOD.upper() == 'FLANN':
-        return FLANN(desc1, desc2)
+        return flann_proxy(desc1, desc2, KEYPOINTS_DESCRIPTOR_METHOD.upper())
     else:
         raise NotImplementedError
 
@@ -431,9 +435,7 @@ def get_map_at_several_ks(query_dir, ks,
 
         print("On dataset "+os.path.split(query_dir)[-1])
 
-        # with open(os.path.join(query_dir, "map_at_k"+datetime.datetime.now().isoformat()+".txt"), "w") as f:
         for k, m in sorted(map_.items()):
-        #         f.write("map@"+str(k)+": "+"%.3f" % m+"\n")
             print("map@"+str(k)+": "+"%.3f" % m+"\n")
         return map_
 
@@ -586,17 +588,12 @@ def keypoints_pipeline():
             preprocesses=True,
             recompute_bbdd_descriptors=True,
             recompute_query_descriptors=True,
-            kwargs_for_descriptors={
-                'SURF' : dict(resize_image=(128,128))
-            },
+            kwargs_for_descriptors={},
             similarity_threshold=2
     )
 
 if __name__ == "__main__":
     MIN_DIST_TO_BE_MATCH = 350
     KEYPOINTS_MATHCER_METHOD = 'FLANN'
-    KEYPOINTS_DESCRIPTOR_METHOD = 'SURF'
+    KEYPOINTS_DESCRIPTOR_METHOD = 'SIFT'
     keypoints_pipeline()
-#    HOG_pipeline()
-    #color_and_text_pipeline()
-    #lbp_and_color_pipeline()
