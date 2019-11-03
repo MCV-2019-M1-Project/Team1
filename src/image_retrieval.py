@@ -597,14 +597,14 @@ def keypoints_pipeline():
             descriptors_sim={"keypoints": keypoints_similarity,
                              },
             preprocesses=True,
-            recompute_bbdd_descriptors=False,
+            recompute_bbdd_descriptors=True,
             recompute_query_descriptors=True,
             kwargs_for_descriptors={},
             similarity_threshold=30
     )
 
 if __name__ == "__main__":
-    MIN_DIST_TO_BE_MATCH = 350
-    KEYPOINTS_MATHCER_METHOD = 'FLANN'
-    KEYPOINTS_DESCRIPTOR_METHOD = 'ORB'
+    MIN_DIST_TO_BE_MATCH = 450
+    KEYPOINTS_MATHCER_METHOD = 'BFM'
+    KEYPOINTS_DESCRIPTOR_METHOD = 'SIFT'
     keypoints_pipeline()
