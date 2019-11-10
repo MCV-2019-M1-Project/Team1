@@ -61,7 +61,7 @@ def classify_images_in_clusters(n_clusters, n_best_results_to_show):
         bbdd_paintings.append(painting)
 
     #Compute descriptors
-    descriptors = rgb_gradientxy_mean_and_variance_descriptors(bbdd_paintings)
+    descriptors = hsv_mean_variance_gradient_mean_angle_descriptors(bbdd_paintings)
 
     #k_means clustering
     km = KMeans(n_clusters, 'k-means++').fit(descriptors)
@@ -145,6 +145,102 @@ def rgb_gradientxy_mean_and_variance_descriptors(bbdd_paintings):
         descriptors.append(descriptor)
     return descriptors
 
+def hsv_mean_variance_gradient_mean_angle_descriptors(bbdd_paintings):
+    #Initialize descriptors
+    hue_mean_descriptor = []
+    saturation_mean_descriptor = []
+    value_mean_descriptor = []
+
+    hue_variance_descriptor = []
+    saturation_variance_descriptor = []
+    value_variance_descriptor = []
+
+    laplacian_mean_descriptor = []
+    laplacian_variance_descriptor = []
+
+    sobel_phase_mean_descriptor = []
+    sobel_phase_variance_descriptor = []
+
+    #Compute descriptors
+    for painting in bbdd_paintings:
+        image_gray = cv2.cvtColor(painting, cv2.COLOR_BGR2GRAY)
+        image_hsv = cv2.cvtColor(painting, cv2.COLOR_BGR2HSV)
+        sobelx = cv2.Sobel(image_gray,cv2.CV_64F,1,0,ksize=5)
+        sobely = cv2.Sobel(image_gray,cv2.CV_64F,0,1,ksize=5)
+        sobel_phase = cv2.phase(sobelx,sobely,angleInDegrees=True)
+        laplacian = cv2.Laplacian(image_gray,cv2.CV_64F)
+        hue = image_hsv[:,:,0]
+        saturation = image_hsv[:,:,1]
+        value = image_hsv[:,:,2]
+
+        #HUE
+        hue_average = hue.mean(axis=0).mean(axis=0)
+        hue_mean_descriptor.append(hue_average)
+        hue_variance = np.var(hue, dtype=np.float64)
+        hue_variance_descriptor.append(hue_variance)
+
+        #SATURATION
+        saturation_average = saturation.mean(axis=0).mean(axis=0)
+        saturation_mean_descriptor.append(saturation_average)
+        saturation_variance = np.var(saturation, dtype=np.float64)
+        saturation_variance_descriptor.append(saturation_variance)
+
+        #VALUE
+        value_average = value.mean(axis=0).mean(axis=0)
+        value_mean_descriptor.append(value_average)
+        value_variance = np.var(value, dtype=np.float64)
+        value_variance_descriptor.append(value_variance)
+
+        #GRADIENT VALUE
+        laplacian_average = laplacian.mean(axis=0).mean(axis=0)
+        laplacian_mean_descriptor.append(laplacian_average)
+        laplacian_variance = np.var(laplacian, dtype=np.float64)
+        laplacian_variance_descriptor.append(laplacian_variance)
+
+        #GRADIENT VALUE
+        sobel_phase_average = sobel_phase.mean(axis=0).mean(axis=0)
+        sobel_phase_mean_descriptor.append(sobel_phase_average)
+        sobel_phase_variance = np.var(sobel_phase, dtype=np.float64)
+        sobel_phase_variance_descriptor.append(sobel_phase_variance)
+
+    #Normalize descriptors
+    hue_mean_descriptor = normalize(hue_mean_descriptor, 0.0, 1.0)
+    hue_variance_descriptor = normalize(hue_variance_descriptor, 0.0, 1.0)
+
+    saturation_mean_descriptor = normalize(saturation_mean_descriptor, 0.0, 1.0)
+    saturation_variance_descriptor = normalize(saturation_variance_descriptor, 0.0, 1.0)
+
+    value_mean_descriptor = normalize(value_mean_descriptor, 0.0, 1.0)
+    value_variance_descriptor = normalize(value_variance_descriptor, 0.0, 1.0)
+
+    laplacian_mean_descriptor = normalize(laplacian_mean_descriptor, 0.0, 1.0)
+    laplacian_variance_descriptor = normalize(laplacian_variance_descriptor, 0.0, 1.0)
+
+    sobel_phase_mean_descriptor = normalize(sobel_phase_mean_descriptor, 0.0, 1.0)
+    sobel_phase_variance_descriptor = normalize(sobel_phase_variance_descriptor, 0.0, 1.0)
+
+    #Join descriptors and return
+    descriptors = []
+    for i in range(len(hue_mean_descriptor)):
+        descriptor = []
+        descriptor.append(hue_mean_descriptor[i])
+        descriptor.append(hue_variance_descriptor[i])
+
+        descriptor.append(laplacian_mean_descriptor[i])
+        descriptor.append(laplacian_variance_descriptor[i])
+
+        descriptor.append(sobel_phase_mean_descriptor[i])
+        descriptor.append(sobel_phase_variance_descriptor[i])
+
+        descriptors.append(descriptor)
+    return descriptors
+
+def normalize(list, new_min, new_max):
+    minim = min(list)
+    range = float(max(list) - minim)
+    new_range = float(new_max - new_min)
+    ret = [float(i - minim) / range * new_range + new_min for i in list]
+    return ret
 
 #Example of usage
 classify_images_in_clusters(10,4)
