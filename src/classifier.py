@@ -64,17 +64,16 @@ def classify_images_in_clusters(n_clusters, n_best_results_to_show):
     descriptors = []
     for painting in bbdd_paintings:
         descriptor = []
+
         #COLOR MEAN
         #Red mean color descriptor
         red_channel = painting[:,:,0]
         red_average = red_channel.mean(axis=0).mean(axis=0)
         descriptor.append(red_average)
-
         #Green mean color descriptor
         green_channel = painting[:,:,1]
         green_average = green_channel.mean(axis=0).mean(axis=0)
         descriptor.append(green_average)
-
         #Blue mean color descriptor
         blue_channel = painting[:,:,0]
         blue_average = blue_channel.mean(axis=0).mean(axis=0)
@@ -84,14 +83,31 @@ def classify_images_in_clusters(n_clusters, n_best_results_to_show):
         #Red variance color descriptor
         red_variance = np.var(red_channel, dtype=np.float64)
         descriptor.append(red_variance)
-
         #Green variance color descriptor
         green_variance = np.var(green_channel, dtype=np.float64)
         descriptor.append(green_variance)
-
         #Blue variance color descriptor
         blue_variance = np.var(blue_channel, dtype=np.float64)
         descriptor.append(blue_variance)
+
+        #GRADIENT MEAN
+        image_gray = cv2.cvtColor(painting, cv2.COLOR_BGR2GRAY)
+        sobelx = cv2.Sobel(image_gray,cv2.CV_64F,1,0,ksize=5)
+        sobely = cv2.Sobel(image_gray,cv2.CV_64F,0,1,ksize=5)
+        #X gradient mean descriptor
+        x_grad_average = sobelx.mean(axis=0).mean(axis=0)
+        descriptor.append(x_grad_average)
+        #Y gradient mean descriptor
+        y_grad_average = sobely.mean(axis=0).mean(axis=0)
+        descriptor.append(y_grad_average)
+
+        #GRADIENT VARIANCE
+        #X gradient variance descriptor
+        x_grad_variance = np.var(sobelx, dtype=np.float64)
+        descriptor.append(x_grad_variance)
+        #Y gradient variance descriptor
+        y_grad_variance = np.var(sobely, dtype=np.float64)
+        descriptor.append(y_grad_variance)
 
         #Append descriptor
         descriptors.append(descriptor)
