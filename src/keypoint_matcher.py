@@ -31,20 +31,20 @@ def BFM(des1, des2, norm_type, max_distance_to_consider_match=1.0, cross_Check=F
     '''
     if des1 is None or des2 is None:
         return 0
-       
+
     bf = cv2.BFMatcher(cv2.NORM_L1, crossCheck=cross_Check)
     matches = bf.knnMatch(des1,des2,k=2)
-    
+
     good_matches = []
     print(matches)
-    
+
     for matches_list in matches:
         m = matches_list
         print(m)
         m, n = m
         if m.distance < 0.55*n.distance:
             good_matches.append(m)
-        
+
     return len(good_matches)
 
 def FLANN(des1, des2, descriptor='SURF'):
