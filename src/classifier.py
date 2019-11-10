@@ -61,6 +61,38 @@ def classify_images_in_clusters(n_clusters, n_best_results_to_show):
         bbdd_paintings.append(painting)
 
     #Compute descriptors
+    descriptors = rgb_gradientxy_mean_and_variance_descriptors(bbdd_paintings)
+
+    #k_means clustering
+    km = KMeans(n_clusters, 'k-means++').fit(descriptors)
+    distances = km.transform(descriptors)
+    labels = km.labels_
+
+    #Sort results and obtain n_best_results_to_show
+    #Sort by cluster
+    images_in_clusters = [ [] for i in range(n_clusters) ]
+    for i in range(distances.shape[0]):
+        image = bbdd_paintings[i]
+        cluster = labels[i]
+        distance = min(distances[i])
+        images_in_clusters[cluster].append([image, distance])
+    #Sort by distance to cluster center
+    for images_in_cluster in images_in_clusters:
+        images_in_cluster.sort(key=lambda x: x[1])
+    #Obtain n_best_results_to_show
+    images_in_clusters = [images_in_cluster[0:n_best_results_to_show] for images_in_cluster in images_in_clusters]
+
+    #Show results
+    for i in range(len(images_in_clusters)):
+        if(len(images_in_clusters[i])>=4):
+            numpy_horizontal_concat1 = np.concatenate((cv2.resize(images_in_clusters[i][0][0],(500,500)), cv2.resize(images_in_clusters[i][1][0],(500,500))), axis=1)
+            numpy_horizontal_concat2 = np.concatenate((cv2.resize(images_in_clusters[i][2][0],(500,500)), cv2.resize(images_in_clusters[i][3][0],(500,500))), axis=1)
+            numpy_vertical_concat = np.concatenate((numpy_horizontal_concat1, numpy_horizontal_concat2), axis=0)
+            cv2.imshow('cluster_'+str(i),numpy_vertical_concat)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+def rgb_gradientxy_mean_and_variance_descriptors(bbdd_paintings):
     descriptors = []
     for painting in bbdd_paintings:
         descriptor = []
@@ -111,35 +143,7 @@ def classify_images_in_clusters(n_clusters, n_best_results_to_show):
 
         #Append descriptor
         descriptors.append(descriptor)
-
-    #k_means clustering
-    km = KMeans(n_clusters, 'k-means++').fit(descriptors)
-    distances = km.transform(descriptors)
-    labels = km.labels_
-
-    #Sort results and obtain n_best_results_to_show
-    #Sort by cluster
-    images_in_clusters = [ [] for i in range(n_clusters) ]
-    for i in range(distances.shape[0]):
-        image = bbdd_paintings[i]
-        cluster = labels[i]
-        distance = min(distances[i])
-        images_in_clusters[cluster].append([image, distance])
-    #Sort by distance to cluster center
-    for images_in_cluster in images_in_clusters:
-        images_in_cluster.sort(key=lambda x: x[1])
-    #Obtain n_best_results_to_show
-    images_in_clusters = [images_in_cluster[0:n_best_results_to_show] for images_in_cluster in images_in_clusters]
-
-    #Show results
-    for i in range(len(images_in_clusters)):
-        if(len(images_in_clusters[i])>=4):
-            numpy_horizontal_concat1 = np.concatenate((cv2.resize(images_in_clusters[i][0][0],(500,500)), cv2.resize(images_in_clusters[i][1][0],(500,500))), axis=1)
-            numpy_horizontal_concat2 = np.concatenate((cv2.resize(images_in_clusters[i][2][0],(500,500)), cv2.resize(images_in_clusters[i][3][0],(500,500))), axis=1)
-            numpy_vertical_concat = np.concatenate((numpy_horizontal_concat1, numpy_horizontal_concat2), axis=0)
-            cv2.imshow('cluster_'+str(i),numpy_vertical_concat)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    return descriptors
 
 
 #Example of usage
