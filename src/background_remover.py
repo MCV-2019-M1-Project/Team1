@@ -4,6 +4,8 @@ except ImportError:
     import cv2.cv2 as cv2
 import numpy as np
 from scipy.signal import find_peaks
+import imutils
+from scipy import ndimage
 from scipy.ndimage import gaussian_filter1d
 from text_detector import detect_text_box
 
@@ -223,7 +225,7 @@ def get_background_and_text_mask(im, single_sure=False, return_only_bounding_box
     else:
         return mask, text_bboxes
 
-def compute_paintings_mask(image):
+def _compute_paintings_mask(image):
     canny = cv2.dilate(cv2.Canny(cv2.medianBlur(image, 9), 8, 28), None, iterations=7)
     _, con, _ = cv2.findContours(canny, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
     cs = [[c, cv2.contourArea(contour=c)] for c in con]
@@ -232,6 +234,94 @@ def compute_paintings_mask(image):
     [cv2.fillConvexPoly(paintings_mask, x[0], [2**8]*3) for x in cs if not x[1] <= cs[0][1]*(0.08)]
     paintings_mask = cv2.erode(cv2.dilate(paintings_mask, None, iterations=3), None, iterations=7)
     return paintings_mask
+
+
+def order_paintings(list_of_paintings):
+    """
+    Receives a list of bounding boxes and orders them left to right or top to bottom
+
+    elem: [angle, [(px1, py1), (px2, py2), (px3, py3), (px4, py4)], painting]
+
+    Este sea probablemente el código del que menos orgulloso me siento en mucho tiempo
+    """
+    if len(list_of_paintings) == 1:
+        return list_of_paintings
+
+    elif len(list_of_paintings) == 2:
+        elem1 = list_of_paintings[0]
+        elem2 = list_of_paintings[1]
+
+        mean_x_1 = np.average([x[0] for x in elem1[1]])
+        mean_x_2 = np.average([x[0] for x in elem2[1]])
+
+        mean_y_1 = np.average([y[1] for y in elem1[1]])
+        mean_y_2 = np.average([y[1] for y in elem2[1]])
+
+        print("Center 1: (" + str(mean_x_1) + "," + str(mean_y_1) + ")")
+        print("Center 2: (" + str(mean_x_2) + "," + str(mean_y_2) + ")")
+
+        if abs(mean_x_1 - mean_x_2) > abs(mean_y_1 - mean_y_2):
+            # Estan en horizontal
+            if mean_x_1 < mean_x_2:
+                return list_of_paintings
+            else:
+                return list_of_paintings[::-1]
+        else:
+            # Estan en vertical
+            if mean_y_1 < mean_y_2:
+                return list_of_paintings
+            else:
+                return list_of_paintings[::-1]
+
+    elif len(list_of_paintings) == 3:
+        elem1 = list_of_paintings[0]
+        elem2 = list_of_paintings[1]
+        elem3 = list_of_paintings[2]
+
+        mean_x_1 = np.average([x[0] for x in elem1[1]])
+        mean_x_2 = np.average([x[0] for x in elem2[1]])
+        mean_x_3 = np.average([x[0] for x in elem3[1]])
+
+        mean_y_1 = np.average([y[1] for y in elem1[1]])
+        mean_y_2 = np.average([y[1] for y in elem2[1]])
+        mean_y_3 = np.average([y[1] for y in elem3[1]])
+
+        print("Center 1: (" + str(mean_x_1) + "," + str(mean_y_1) + ")")
+        print("Center 2: (" + str(mean_x_2) + "," + str(mean_y_2) + ")")
+        print("Center 3: (" + str(mean_x_3) + "," + str(mean_y_3) + ")")
+
+        if abs(mean_x_1 - mean_x_2) > abs(mean_y_1 - mean_y_2):
+            # Horizontal
+            if mean_x_1 < mean_x_2 < mean_x_3:
+                return [elem1, elem2, elem3]
+            elif mean_x_1 < mean_x_3 < mean_x_2:
+                return [elem1, elem3, elem2]
+
+            elif mean_x_2 < mean_x_1 < mean_x_3:
+                return [elem2, elem1, elem3]
+            elif mean_x_2 < mean_x_3 < mean_x_1:
+                return [elem2, elem3, elem1]
+
+            elif mean_x_3 < mean_x_1 < mean_x_2:
+                return [elem3, elem1, elem2]
+            elif mean_x_3 < mean_x_2 < mean_x_1:
+                return [elem3, elem2, elem1]
+        else:
+            # Vertical
+            if mean_y_1 < mean_y_2 < mean_y_3:
+                return [elem1, elem2, elem3]
+            elif mean_y_1 < mean_y_3 < mean_y_2:
+                return [elem1, elem3, elem2]
+
+            elif mean_y_2 < mean_y_1 < mean_y_3:
+                return [elem2, elem1, elem3]
+            elif mean_y_2 < mean_y_3 < mean_y_1:
+                return [elem2, elem3, elem1]
+
+            elif mean_y_3 < mean_y_1 < mean_y_2:
+                return [elem3, elem1, elem2]
+            elif mean_y_3 < mean_y_2 < mean_y_1:
+                return [elem3, elem2, elem1]
 
 if __name__ == "__main__":
     pass
