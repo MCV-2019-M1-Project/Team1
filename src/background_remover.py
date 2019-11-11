@@ -323,5 +323,32 @@ def order_paintings(list_of_paintings):
             elif mean_y_3 < mean_y_2 < mean_y_1:
                 return [elem3, elem2, elem1]
 
+def get_all_subpaintings(image):
+    blurred_image = cv2.medianBlur(image, 9)
+    mask = _compute_paintings_mask(blurred_image)
+    cs = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cs = imutils.grab_contours(cs)
+    subpaintings = []
+    for c in cs:
+        found_rectangle = cv2.minAreaRect(c)
+        theta = found_rectangle[2]
+        if 0.0 >= theta > -45.0: angle = theta * -1.0
+        elif theta < -45.0: angle = theta * -1.0 + 90.0
+        points = cv2.boxPoints(found_rectangle)
+        points = np.int0(points)
+        w = int(found_rectangle[1][0])
+        h = int(found_rectangle[1][1])
+        dst_pts = np.array([[0, h - 1], [0, 0], [w - 1, 0],[w - 1, h - 1]], dtype="float32")
+        src_pts = points.astype("float32")
+        transformation_matrix = cv2.getPerspectiveTransform(src_pts, dst_pts)
+        rotated_image = cv2.warpPerspective(image, transformation_matrix.astype('float32'), (w, h))
+        if angle > 90: rotated_image = ndimage.rotate(rotated_image, 90)
+        p1 = points[0][0], points[0][1]
+        p2 = points[1][0], points[1][1]
+        p3 = points[2][0], points[2][1]
+        p4 = points[3][0], points[3][1]
+        subpaintings.append([angle, [p1, p2, p3, p4], rotated_image])
+    return order_paintings(subpaintings)
+
 if __name__ == "__main__":
     pass
