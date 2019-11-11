@@ -14,14 +14,22 @@ from denoising import remove_salt_and_pepper_noise
 from texture_descriptors import LBP, HOG
 from image_descriptors import similarity_for_descriptors, best_color_descriptor
 from text_detector import get_text_mask_BGR, detect_text_box
+from keypoint_detection import (
+    difference_of_gaussians,
+    determinant_of_hessian,
+    laplacian_of_gaussian,
+    ORB,
+    SIFT,
+    SURF
+)
 from keypoint_matcher import (
-    BFM,
-    FLANN
+    BFM_KNN,
+    FLANN_KNN
 )
 from keypoint_descriptors import (
-    SIFT,
-    SURF,
-    ORB
+    SURF_descriptor,
+    ORB_descriptor,
+    SIFT_descriptor
 )
 
 
@@ -126,27 +134,37 @@ def color_descriptor(image, **kwargs):
 ## KEYPOINTS DESCRIPTORS #################
 
 def keypoints_descriptor(image, **kwargs):
-    if KEYPOINTS_DESCRIPTOR_METHOD.upper() == 'SIFT':
-        return SIFT(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), **kwargs)
-    elif KEYPOINTS_DESCRIPTOR_METHOD.upper() == 'SURF':
-        return SURF(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), **kwargs)
-    elif KEYPOINTS_DESCRIPTOR_METHOD.upper() == 'ORB':
-        return ORB(image, **kwargs)
+    if KEYPOINTS_DETECTOR.upper() != 'ORB':
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray_image = image
+    gray_image = cv2.resize(gray_image, (SIZE, SIZE), interpolation=cv2.INTER_AREA)
+
+    if KEYPOINTS_DETECTOR.upper() == 'DOG':
+        keypoints = difference_of_gaussians(gray_image)
+    elif KEYPOINTS_DETECTOR.upper() == 'DOH':
+        keypoints = determinant_of_hessian(gray_image)
+    elif KEYPOINTS_DETECTOR.upper() == 'LOG':
+        keypoints = laplacian_of_gaussian(gray_image)
+    elif KEYPOINTS_DETECTOR.upper() == 'ORB':
+        keypoints = ORB(gray_image)
+    elif KEYPOINTS_DETECTOR.upper() == 'SURF':
+        keypoints = SURF(gray_image, HESSIAN_THRESHOLD)
+    elif KEYPOINTS_DETECTOR.upper() == 'SIFT':
+        keypoints = SIFT(gray_image)
     else:
         raise NotImplementedError
 
-def flann_proxy(*args):
-    result = FLANN(*args)
-    return result[0] # Only number of matches
+    if KEYPOINTS_DESCRIPTOR.upper() == 'SURF':
+        return SURF_descriptor(gray_image, keypoints)
+    else:
+        raise NotImplementedError
 
 def keypoints_similarity(desc1, desc2):
-    """
-    Similarity is based in the number of matches
-    """
-    if KEYPOINTS_MATHCER_METHOD.upper() == 'BFM':
-        return BFM(desc1, desc2, norm_type=cv2.NORM_L2, max_distance_to_consider_match=MIN_DIST_TO_BE_MATCH)
-    elif KEYPOINTS_MATHCER_METHOD.upper() == 'FLANN':
-        return FLANN(desc1, desc2, KEYPOINTS_DESCRIPTOR_METHOD.upper())
+    if KEYPOINTS_MATHCER.upper() == 'BFM_KNN':
+        return BFM_KNN(desc1, desc2, cv2.NORM_L2)
+    elif KEYPOINTS_MATHCER.upper() == 'FLANN_KNN':
+        return FLANN_KNN(desc1, desc2, KEYPOINTS_DETECTOR)
     else:
         raise NotImplementedError
 
@@ -576,7 +594,10 @@ def keypoints_pipeline():
     )
 
 if __name__ == "__main__":
-    MIN_DIST_TO_BE_MATCH = 550
-    KEYPOINTS_MATHCER_METHOD = 'BFM'
-    KEYPOINTS_DESCRIPTOR_METHOD = 'SURF'
+    KEYPOINTS_MATHCER = 'BFM_KNN'
+    KEYPOINTS_DETECTOR = 'SURF'
+    KEYPOINTS_DESCRIPTOR = 'SURF'
+    HESSIAN_THRESHOLD = 800
+    SIZE = 512
+
     keypoints_pipeline()
