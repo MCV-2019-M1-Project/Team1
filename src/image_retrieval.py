@@ -8,7 +8,7 @@ import ml_metrics as metrics
 import random
 import numpy as np
 from text_recognition import text_recognition
-from background_remover import remove_background, get_background_and_text_mask
+from background_remover import get_all_subpaintings, remove_background, get_background_and_text_mask
 import re
 from denoising import remove_salt_and_pepper_noise
 from texture_descriptors import LBP, HOG
@@ -164,12 +164,9 @@ def tapar_texto(im):
 def apply_denoising(im):
     return remove_salt_and_pepper_noise(im)
 
-def apply_preprocessing(image_filepath, preprocessing, no_bg, single_sure):
-    im = cv2.imread(image_filepath)
-    im = apply_denoising(im)
-    im = tapar_texto(im)
-    return [tapar_texto(im)] if no_bg else \
-        [tapar_texto(ima) for ima in remove_background(im, single_sure=single_sure)]
+def apply_preprocessing(im):
+    return tapar_texto(apply_denoising(im))
+
 
 def merge_similarities(sim_by_desc, similarity_threshold=None):
     """
@@ -277,20 +274,17 @@ def get_descriptors_given_query_dir(descriptors_definition,
                                   lambda f: f.endswith('.jpg'), os.listdir(folder)))]
 
     # Para cada número de imagen, una lista que acabará conteniendo un diccionario por cada cuadro contenido en la imagen
-    descriptors = {k: [{}, {}] for k in [int(os.path.split(x)[-1][-9:-4]) for x in folder_images_paths]}
+    descriptors = {k: [{}, {}, {}] for k in [int(os.path.split(x)[-1][-9:-4]) for x in folder_images_paths]}
 
     for image_filepath in folder_images_paths:
         print("Current image: "+image_filepath)
         im_num = int(os.path.split(image_filepath)[-1][-9:-4])
-        if preprocessing is not None:
-            list_containing_one_or_two_images = apply_preprocessing(image_filepath,
-                                                                    preprocessing,
-                                                                    no_bg,
-                                                                    single_sure)
+        if 'bbdd' in folder:
+            subpaintings = [cv2.imread(image_filepath)]
         else:
-            list_containing_one_or_two_images = [cv2.imread(image_filepath)]
-
-        print("\t"+str(len(list_containing_one_or_two_images))+ " paintings were found in the image")
+            subpaintings = get_all_subpaintings(cv2.imread(image_filepath))
+            subpaintings = [apply_preprocessing(x[-1]) for x in subpaintings]
+        print("\t"+str(len(subpaintings))+ " paintings were found in the image")
 
         if kwargs_for_descriptors is None: kwargs_for_descriptors = {}
         for descriptor_name, descriptor_func in descriptors_definition.items():
@@ -301,7 +295,7 @@ def get_descriptors_given_query_dir(descriptors_definition,
             if descriptor_func == text_bbdd:
                 kwargs_for_this_descriptor.update(image_filepath=image_filepath)
             #try:
-            for i, im in enumerate(list_containing_one_or_two_images):
+            for i, im in enumerate(subpaintings):
                 print("\tApplying descriptor " + descriptor_name + " to painting #"+str(i)+"... ",end="")
                 descriptors[im_num][i][descriptor_name] = descriptor_func(im, **kwargs_for_this_descriptor)
                 print("DONE")
@@ -433,15 +427,13 @@ def get_map_at_several_ks(query_dir, ks,
 def color_pipeline():
     # Solo color
     get_map_at_several_ks(
-            query_dir=os.path.join("..", "queries", "qsd1_w4"),
+            query_dir=os.path.join("..", "queries", "qsd1_w5"),
             ks=[1, 5, 10],
             descriptors={"color": best_color_descriptor,
                          },
             descriptors_sim={"color": generic_histogram_similarity,
                              },
-            preprocesses=True,
-            no_bg=False,
-            recompute_bbdd_descriptors=False,
+            recompute_bbdd_descriptors=True,
             recompute_query_descriptors=True,
             kwargs_for_descriptors={
                 "color": {}
