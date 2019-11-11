@@ -223,6 +223,15 @@ def get_background_and_text_mask(im, single_sure=False, return_only_bounding_box
     else:
         return mask, text_bboxes
 
+def compute_paintings_mask(image):
+    canny = cv2.dilate(cv2.Canny(cv2.medianBlur(image, 9), 8, 28), None, iterations=7)
+    _, con, _ = cv2.findContours(canny, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+    cs = [[c, cv2.contourArea(contour=c)] for c in con]
+    cs = sorted(cs, key=lambda x: x[1], reverse=True)
+    paintings_mask = np.zeros_like(canny)
+    [cv2.fillConvexPoly(paintings_mask, x[0], [2**8]*3) for x in cs if not x[1] <= cs[0][1]*(0.08)]
+    paintings_mask = cv2.erode(cv2.dilate(paintings_mask, None, iterations=3), None, iterations=7)
+    return paintings_mask
 
 if __name__ == "__main__":
     pass
