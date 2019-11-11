@@ -5,13 +5,11 @@ try:
 except ImportError:
     import cv2.cv2 as cv2
 import ml_metrics as metrics
-import datetime
 import random
 import numpy as np
 from text_recognition import text_recognition
 from background_remover import remove_background, get_background_and_text_mask
 import re
-from keypoint_matcher import BFM
 from denoising import remove_salt_and_pepper_noise
 from texture_descriptors import LBP, HOG
 from image_descriptors import similarity_for_descriptors, best_color_descriptor
@@ -25,15 +23,7 @@ from keypoint_descriptors import (
     SURF,
     ORB
 )
-#from sift_descriptors import SIFT_descriptors_matcher, SIFT_method
 
-from log_keypoint_detection import compute_blob_keypoints
-
-#TODO #1: Validar background_removal y text_bounding_box detection
-
-#TODO #2: Adaptar la pipeline para que soporte comparacion de keypoints
-
-#TODO #3: Validar deinoising
 
 ## DUMMYS #####
 
@@ -580,7 +570,7 @@ def old_pipelines():
 def keypoints_pipeline():
     # Solo keypoints
     get_map_at_several_ks(
-            query_dir=os.path.join("..", "queries", "qsd1_w4"),
+            query_dir=os.path.join("..", "queries", "qsd1_w5"),
             ks=[1, 5, 10],
             descriptors={"keypoints": keypoints_descriptor,
                          },
