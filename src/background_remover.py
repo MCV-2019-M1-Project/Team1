@@ -257,8 +257,8 @@ def order_paintings(list_of_paintings):
         mean_y_1 = np.average([y[1] for y in elem1[1]])
         mean_y_2 = np.average([y[1] for y in elem2[1]])
 
-        print("Center 1: (" + str(mean_x_1) + "," + str(mean_y_1) + ")")
-        print("Center 2: (" + str(mean_x_2) + "," + str(mean_y_2) + ")")
+        #print("Center 1: (" + str(mean_x_1) + "," + str(mean_y_1) + ")")
+        #print("Center 2: (" + str(mean_x_2) + "," + str(mean_y_2) + ")")
 
         if abs(mean_x_1 - mean_x_2) > abs(mean_y_1 - mean_y_2):
             # Estan en horizontal
@@ -286,9 +286,9 @@ def order_paintings(list_of_paintings):
         mean_y_2 = np.average([y[1] for y in elem2[1]])
         mean_y_3 = np.average([y[1] for y in elem3[1]])
 
-        print("Center 1: (" + str(mean_x_1) + "," + str(mean_y_1) + ")")
-        print("Center 2: (" + str(mean_x_2) + "," + str(mean_y_2) + ")")
-        print("Center 3: (" + str(mean_x_3) + "," + str(mean_y_3) + ")")
+        #print("Center 1: (" + str(mean_x_1) + "," + str(mean_y_1) + ")")
+        #print("Center 2: (" + str(mean_x_2) + "," + str(mean_y_2) + ")")
+        #print("Center 3: (" + str(mean_x_3) + "," + str(mean_y_3) + ")")
 
         if abs(mean_x_1 - mean_x_2) > abs(mean_y_1 - mean_y_2):
             # Horizontal
