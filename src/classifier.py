@@ -2,7 +2,8 @@ from sklearn.cluster import KMeans
 import itertools
 import numpy as np
 import os
-from cv2 import cv2
+import cv2
+from texture_descriptors import LBP
 
 def k_means_classifier(X, n_clust=10, centroids='random'):
     """
@@ -61,10 +62,10 @@ def classify_images_in_clusters(n_clusters, n_best_results_to_show):
         bbdd_paintings.append(painting)
 
     #Compute descriptors
-    descriptors = hsv_mean_variance_gradient_mean_angle_descriptors(bbdd_paintings)
-
+    descriptors = texture_histogram_descriptors(bbdd_paintings)
+    calc_centroids = get_centroids(descriptors)
     #k_means clustering
-    km = KMeans(n_clusters, 'k-means++').fit(descriptors)
+    km = KMeans(n_clusters, calc_centroids).fit(descriptors)
     distances = km.transform(descriptors)
     labels = km.labels_
 
@@ -84,13 +85,82 @@ def classify_images_in_clusters(n_clusters, n_best_results_to_show):
 
     #Show results
     for i in range(len(images_in_clusters)):
+        print(len(images_in_clusters[i]))
         if(len(images_in_clusters[i])>=4):
-            numpy_horizontal_concat1 = np.concatenate((cv2.resize(images_in_clusters[i][0][0],(500,500)), cv2.resize(images_in_clusters[i][1][0],(500,500))), axis=1)
-            numpy_horizontal_concat2 = np.concatenate((cv2.resize(images_in_clusters[i][2][0],(500,500)), cv2.resize(images_in_clusters[i][3][0],(500,500))), axis=1)
+            numpy_horizontal_concat1 = np.concatenate((cv2.resize(images_in_clusters[i][0][0],(250,250)), cv2.resize(images_in_clusters[i][1][0],(250,250))), axis=1)
+            numpy_horizontal_concat2 = np.concatenate((cv2.resize(images_in_clusters[i][2][0],(250,250)), cv2.resize(images_in_clusters[i][3][0],(250,250))), axis=1)
             numpy_vertical_concat = np.concatenate((numpy_horizontal_concat1, numpy_horizontal_concat2), axis=0)
             cv2.imshow('cluster_'+str(i),numpy_vertical_concat)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+def color_histogram_descriptors(bbdd_paintings, color_channel=0):
+    """
+    computes color histogram for the specified channel color_channel=(0, 1, 2)
+    or for all color channels and concatenates the histograms color_channel=(-1)
+    """
+    X=np.empty((0))
+    for painting in bbdd_paintings:
+        if color_channel==0 or color_channel==1 or color_channel==2:
+            col_hist = cv2.calcHist(painting,[color_channel], None, [256], [0,256])
+        elif color_channel==-1:
+            col1_hist = cv2.calcHist(painting,[0], None, [256], [0,256])
+            col2_hist = cv2.calcHist(painting,[1], None, [256], [0,256])
+            col3_hist = cv2.calcHist(painting,[2], None, [256], [0,256])
+            col_hist = np.concatenate([col1_hist, col2_hist, col3_hist])
+
+        if X.size>0:
+            X = np.vstack((X, col_hist.T))
+        else:
+            X = col_hist.T
+    return X
+
+def texture_histogram_descriptors(bbdd_paintings):
+    X=np.empty((0))
+    for painting in bbdd_paintings:
+        image_gray = cv2.cvtColor(painting, cv2.COLOR_BGR2GRAY)
+
+        text_hist = np.asarray(LBP(image_gray))
+
+        if X.size>0:
+            X = np.vstack((X, text_hist.T))
+        else:
+            X = text_hist.T
+    return X
+
+def texturecolor_histogram_descriptors(bbdd_paintings, color_channel=0):
+    X=np.empty((0))
+    for painting in bbdd_paintings:
+        
+        if color_channel==0 or color_channel==1 or color_channel==2:
+            col_hist = cv2.calcHist(painting,[color_channel], None, [256], [0,256])
+        elif color_channel==-1:
+            col1_hist = cv2.calcHist(painting,[0], None, [256], [0,256])
+            col2_hist = cv2.calcHist(painting,[1], None, [256], [0,256])
+            col3_hist = cv2.calcHist(painting,[2], None, [256], [0,256])
+            col_hist = np.concatenate([col1_hist, col2_hist, col3_hist])
+            
+        image_gray = cv2.cvtColor(painting, cv2.COLOR_BGR2GRAY)
+
+        text_hist = np.asarray(LBP(image_gray))
+        
+        col_text_hist = np.concatenate([col_hist, text_hist])
+
+        if X.size>0:
+            X = np.vstack((X, col_text_hist.T))
+        else:
+            X = col_text_hist.T
+    return X
+
+def get_centroids(X):
+    cent_imgs = [13, 9, 22, 268, 241, 235, 187, 168, 108, 80]
+    centroid = np.empty((0))
+    for cent in cent_imgs:
+        if centroid.size>0:
+                centroid = np.vstack((centroid, X[cent][:]))
+        else:
+                centroid = X[cent][:]
+    return centroid
 
 def rgb_gradientxy_mean_and_variance_descriptors(bbdd_paintings):
     descriptors = []
@@ -262,4 +332,4 @@ def normalize(list, new_min, new_max):
     return ret
 
 #Example of usage
-classify_images_in_clusters(10,4)
+classify_images_in_clusters(10,5)

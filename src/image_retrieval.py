@@ -5,35 +5,33 @@ try:
 except ImportError:
     import cv2.cv2 as cv2
 import ml_metrics as metrics
-import datetime
 import random
 import numpy as np
 from text_recognition import text_recognition
-from background_remover import remove_background, get_background_and_text_mask
+from background_remover import get_all_subpaintings, remove_background, get_background_and_text_mask
 import re
-from keypoint_matcher import BFM
 from denoising import remove_salt_and_pepper_noise
 from texture_descriptors import LBP, HOG
 from image_descriptors import similarity_for_descriptors, best_color_descriptor
 from text_detector import get_text_mask_BGR, detect_text_box
+from keypoint_detection import (
+    difference_of_gaussians,
+    determinant_of_hessian,
+    laplacian_of_gaussian,
+    ORB,
+    SIFT,
+    SURF
+)
 from keypoint_matcher import (
-    BFM,
-    FLANN
+    BFM_KNN,
+    FLANN_KNN
 )
 from keypoint_descriptors import (
-    SIFT,
-    SURF,
-    ORB
+    SURF_descriptor,
+    ORB_descriptor,
+    SIFT_descriptor
 )
-#from sift_descriptors import SIFT_descriptors_matcher, SIFT_method
 
-from log_keypoint_detection import compute_blob_keypoints
-
-#TODO #1: Validar background_removal y text_bounding_box detection
-
-#TODO #2: Adaptar la pipeline para que soporte comparacion de keypoints
-
-#TODO #3: Validar deinoising
 
 ## DUMMYS #####
 
@@ -136,27 +134,41 @@ def color_descriptor(image, **kwargs):
 ## KEYPOINTS DESCRIPTORS #################
 
 def keypoints_descriptor(image, **kwargs):
-    if KEYPOINTS_DESCRIPTOR_METHOD.upper() == 'SIFT':
-        return SIFT(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), **kwargs)
-    elif KEYPOINTS_DESCRIPTOR_METHOD.upper() == 'SURF':
-        return SURF(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), **kwargs)
-    elif KEYPOINTS_DESCRIPTOR_METHOD.upper() == 'ORB':
-        return ORB(image, **kwargs)
+    if KEYPOINTS_DETECTOR.upper() != 'ORB':
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray_image = image
+    gray_image = cv2.resize(gray_image, (SIZE, SIZE), interpolation=cv2.INTER_AREA)
+
+    if KEYPOINTS_DETECTOR.upper() == 'DOG':
+        keypoints = difference_of_gaussians(gray_image)
+    elif KEYPOINTS_DETECTOR.upper() == 'DOH':
+        keypoints = determinant_of_hessian(gray_image)
+    elif KEYPOINTS_DETECTOR.upper() == 'LOG':
+        keypoints = laplacian_of_gaussian(gray_image)
+    elif KEYPOINTS_DETECTOR.upper() == 'ORB':
+        keypoints = ORB(gray_image)
+    elif KEYPOINTS_DETECTOR.upper() == 'SURF':
+        keypoints = SURF(gray_image, HESSIAN_THRESHOLD)
+    elif KEYPOINTS_DETECTOR.upper() == 'SIFT':
+        keypoints = SIFT(gray_image)
     else:
         raise NotImplementedError
 
-def flann_proxy(*args):
-    result = FLANN(*args)
-    return result[0] # Only number of matches
+    if KEYPOINTS_DESCRIPTOR.upper() == 'SURF':
+        return SURF_descriptor(gray_image, keypoints)
+    if KEYPOINTS_DESCRIPTOR.upper() == 'ORB':
+        return ORB_descriptor(gray_image, keypoints)
+    if KEYPOINTS_DESCRIPTOR.upper() == 'SIFT':
+        return SIFT_descriptor(gray_image, keypoints)
+    else:
+        raise NotImplementedError
 
 def keypoints_similarity(desc1, desc2):
-    """
-    Similarity is based in the number of matches
-    """
-    if KEYPOINTS_MATHCER_METHOD.upper() == 'BFM':
-        return BFM(desc1, desc2, norm_type=cv2.NORM_L2, max_distance_to_consider_match=MIN_DIST_TO_BE_MATCH)
-    elif KEYPOINTS_MATHCER_METHOD.upper() == 'FLANN':
-        return FLANN(desc1, desc2, KEYPOINTS_DESCRIPTOR_METHOD.upper())
+    if KEYPOINTS_MATHCER.upper() == 'BFM_KNN':
+        return BFM_KNN(desc1, desc2, MATCH_TYPE, MATCH_RATIO)
+    elif KEYPOINTS_MATHCER.upper() == 'FLANN_KNN':
+        return FLANN_KNN(desc1, desc2, MATCH_RATIO, KEYPOINTS_DETECTOR)
     else:
         raise NotImplementedError
 
@@ -174,12 +186,9 @@ def tapar_texto(im):
 def apply_denoising(im):
     return remove_salt_and_pepper_noise(im)
 
-def apply_preprocessing(image_filepath, preprocessing, no_bg, single_sure):
-    im = cv2.imread(image_filepath)
-    im = apply_denoising(im)
-    im = tapar_texto(im)
-    return [tapar_texto(im)] if no_bg else \
-        [tapar_texto(ima) for ima in remove_background(im, single_sure=single_sure)]
+def apply_preprocessing(im):
+    return tapar_texto(apply_denoising(im))
+
 
 def merge_similarities(sim_by_desc, similarity_threshold=None):
     """
@@ -193,10 +202,10 @@ def merge_similarities(sim_by_desc, similarity_threshold=None):
         return list((v - np.min(v))/np.ptp(v))
 
     if similarity_threshold is not None and len(sim_by_desc) == 1 and 'key' in list(sim_by_desc.keys())[0]:
-        print("\t\tApplying similarity threshold on "+str(similarity_threshold)+" matches.")
+        #print("\t\tApplying similarity threshold on "+str(SIMILARITY_THRESHOLD)+" matches.")
         #Assume one single descriptor and desc_name = keypoints
         matches_per_bbdd_item = list(sim_by_desc.values())[0]
-        if max(matches_per_bbdd_item) < similarity_threshold:
+        if max(matches_per_bbdd_item) < SIMILARITY_THRESHOLD:
             return [-1]
 
 
@@ -220,14 +229,14 @@ def order_by_similarity(bbdd_descriptors, query_descriptor, descriptors_sim, sim
     sim_by_desc = {}
 
     for desc_name, desc_obj in query_descriptor.items():
-        print("\tComputing similarity for descriptor "+desc_name)
+        #print("\tComputing similarity for descriptor "+desc_name)
         # De la base de datos, tengo que coger la imagen "i", y dentro de esta SIEMPRE la 0, porque la bbdd solo tiene un cuadro
         sim_list = [descriptors_sim[desc_name](desc_obj, bbdd_descriptors[i][0][desc_name]) for i in sorted(bbdd_descriptors.keys())]
-        print("\t\tNum_matches: ", sim_list)
+        #print("\t\tNum_matches: ", sim_list)
         sim_by_desc[desc_name] = sim_list[:]
 
-    final_order = merge_similarities(sim_by_desc, similarity_threshold)
-    print("\tMerged predictions:",final_order[:10])
+    final_order = merge_similarities(sim_by_desc, SIMILARITY_THRESHOLD)
+    #print("\tMerged predictions:",final_order[:10])
     return final_order
 
 def compute_similarity_all_queryset(bbdd_descriptors, query_descriptors, descriptors_sim, k_closest=20, similarity_threshold=None):
@@ -238,7 +247,7 @@ def compute_similarity_all_queryset(bbdd_descriptors, query_descriptors, descrip
     """
     predictions = []
     for query_key in sorted(query_descriptors.keys()): # Itero sobre todas las queries
-        print("Computing similarity for query #"+str(query_key))
+        #print("Computing similarity for query #"+str(query_key))
         descriptors_list = query_descriptors[query_key] # Lista que contiene un diccionario de descriptores por cada cuadro encontrado
         query_image_result = []
         for query_descriptor in descriptors_list: # query_descriptor es un { desc_name: fun(I) -> obj , ... }
@@ -246,7 +255,7 @@ def compute_similarity_all_queryset(bbdd_descriptors, query_descriptors, descrip
                     order_by_similarity(bbdd_descriptors,
                                         query_descriptor,
                                         descriptors_sim,
-                                        similarity_threshold)[:k_closest]
+                                        SIMILARITY_THRESHOLD)[:k_closest]
             )
         predictions.append(query_image_result[:])
     return predictions
@@ -269,38 +278,36 @@ def get_descriptors_given_query_dir(descriptors_definition,
     :param no_bg: ONLY CONSIDERED IF preprocessing is not None
     :return: dict(im_num -> lista de diccionarios(descriptor_name -> descriptor_value), 1 para cada cuadro encontrado)
     """
-    print("Getting descriptors for directory: ", folder)
+    #print("Getting descriptors for directory: ", folder)
     if not recompute:
         try:
             with open(os.path.join(folder,"descriptors.pkl"), 'rb') as handle:
-                print("\tGetting cached at "+os.path.join(folder,"descriptors.pkl"))
+                #print("\tGetting cached at "+os.path.join(folder,"descriptors.pkl"))
                 ds = pickle.load(handle)
                 return ds
         except FileNotFoundError:
-            print("\tNo cached version found. Recomputing...")
+            pass
+            #print("\tNo cached version found. Recomputing...")
 
-    print("\tRecomputing...")
+    #print("\tRecomputing...")
 
     folder_images_paths = [os.path.join(folder, image_filename)
-                          for image_filename in
-                          sorted(filter(
-                                  lambda f: f.endswith('.jpg'), os.listdir(folder)))]
+                        for image_filename in
+                        sorted(filter(
+                                lambda f: f.endswith('.jpg'), os.listdir(folder)))]
 
     # Para cada número de imagen, una lista que acabará conteniendo un diccionario por cada cuadro contenido en la imagen
-    descriptors = {k: [{}, {}] for k in [int(os.path.split(x)[-1][-9:-4]) for x in folder_images_paths]}
+    descriptors = {k: [{}, {}, {}] for k in [int(os.path.split(x)[-1][-9:-4]) for x in folder_images_paths]}
 
     for image_filepath in folder_images_paths:
-        print("Current image: "+image_filepath)
+        #print("Current image: "+image_filepath)
         im_num = int(os.path.split(image_filepath)[-1][-9:-4])
-        if preprocessing is not None:
-            list_containing_one_or_two_images = apply_preprocessing(image_filepath,
-                                                                    preprocessing,
-                                                                    no_bg,
-                                                                    single_sure)
+        if 'bbdd' in folder:
+            subpaintings = [cv2.imread(image_filepath)]
         else:
-            list_containing_one_or_two_images = [cv2.imread(image_filepath)]
-
-        print("\t"+str(len(list_containing_one_or_two_images))+ " paintings were found in the image")
+            subpaintings = get_all_subpaintings(cv2.imread(image_filepath))
+            subpaintings = [apply_preprocessing(x[-1]) for x in subpaintings]
+        #print("\t"+str(len(subpaintings))+ " paintings were found in the image")
 
         if kwargs_for_descriptors is None: kwargs_for_descriptors = {}
         for descriptor_name, descriptor_func in descriptors_definition.items():
@@ -311,10 +318,10 @@ def get_descriptors_given_query_dir(descriptors_definition,
             if descriptor_func == text_bbdd:
                 kwargs_for_this_descriptor.update(image_filepath=image_filepath)
             #try:
-            for i, im in enumerate(list_containing_one_or_two_images):
-                print("\tApplying descriptor " + descriptor_name + " to painting #"+str(i)+"... ",end="")
+            for i, im in enumerate(subpaintings):
+                #print("\tApplying descriptor " + descriptor_name + " to painting #"+str(i)+"... ",end="")
                 descriptors[im_num][i][descriptor_name] = descriptor_func(im, **kwargs_for_this_descriptor)
-                print("DONE")
+                #print("DONE")
             #except BaseException as e:
             #    print(e)
 
@@ -360,8 +367,8 @@ def get_map_at_several_ks(query_dir, ks,
                                                            recompute_bbdd_descriptors,
                                                            kwargs_for_descriptors=kwargs_for_descriptors)
     except Exception as e:
-        print(" **************** Exception ocurred while getting the bbdd descriptors **************** ")
-        print(e)
+        #print(" **************** Exception ocurred while getting the bbdd descriptors **************** ")
+        #print(e)
         raise e
 
     else:
@@ -379,25 +386,25 @@ def get_map_at_several_ks(query_dir, ks,
                                                             single_sure=single_sure,
                                                             kwargs_for_descriptors=kwargs_for_descriptors)
     except Exception as e:
-        print("**************** Exception ocurred while getting the query descriptors **************** ")
-        print(e)
+        #print("**************** Exception ocurred while getting the query descriptors **************** ")
+        #print(e)
         raise e
     else:
         if recompute_query_descriptors:
             with open(os.path.join(query_dir,"descriptors.pkl"), "wb") as f:
                 pickle.dump(query_descriptors, f)
-            print("Written query descriptors at "+os.path.join(query_dir,"descriptors.pkl"))
+            #print("Written query descriptors at "+os.path.join(query_dir,"descriptors.pkl"))
 
     predictions = compute_similarity_all_queryset(bbdd_descriptors,
                                                   query_descriptors,
                                                   descriptors_sim,
                                                   k_closest=max(ks),
-                                                  similarity_threshold=similarity_threshold)
+                                                  similarity_threshold=SIMILARITY_THRESHOLD)
 
     if submission:
         with open(os.path.join(query_dir, "result.pkl"), "wb") as f:
             pickle.dump(predictions, f)
-        print("Dumped submission results at ",os.path.join(query_dir, "result.pkl"))
+        #print("Dumped submission results at ",os.path.join(query_dir, "result.pkl"))
 
     if not submission:
         with open(os.path.join(query_dir,"gt_corresps.pkl") ,'rb') as handle:
@@ -425,16 +432,16 @@ def get_map_at_several_ks(query_dir, ks,
 
         map_ = {k : map_[k]/number_of_paintings_queried for k in map_.keys()}
 
-        print()
+        #print()
 
         print("number_of_paintings_queried: ", number_of_paintings_queried)
         print("number_of_misidentified_number_of_paintings: ",number_of_misidentified_number_of_paintings)
 
-        print()
+        #print()
 
-        print("On dataset "+os.path.split(query_dir)[-1])
+        #print("On dataset "+os.path.split(query_dir)[-1])
 
-        print()
+        #print()
 
         for k, m in sorted(map_.items()):
             print("map@"+str(k)+": "+"%.3f" % m+"\n")
@@ -443,15 +450,13 @@ def get_map_at_several_ks(query_dir, ks,
 def color_pipeline():
     # Solo color
     get_map_at_several_ks(
-            query_dir=os.path.join("..", "queries", "qsd1_w4"),
+            query_dir=os.path.join("..", "queries", "qsd1_w5"),
             ks=[1, 5, 10],
             descriptors={"color": best_color_descriptor,
                          },
             descriptors_sim={"color": generic_histogram_similarity,
                              },
-            preprocesses=True,
-            no_bg=False,
-            recompute_bbdd_descriptors=False,
+            recompute_bbdd_descriptors=True,
             recompute_query_descriptors=True,
             kwargs_for_descriptors={
                 "color": {}
@@ -580,7 +585,7 @@ def old_pipelines():
 def keypoints_pipeline():
     # Solo keypoints
     get_map_at_several_ks(
-            query_dir=os.path.join("..", "queries", "qsd1_w4"),
+            query_dir=os.path.join("..", "queries", "qsd1_w5"),
             ks=[1, 5, 10],
             descriptors={"keypoints": keypoints_descriptor,
                          },
@@ -594,7 +599,85 @@ def keypoints_pipeline():
     )
 
 if __name__ == "__main__":
-    MIN_DIST_TO_BE_MATCH = 550
-    KEYPOINTS_MATHCER_METHOD = 'BFM'
-    KEYPOINTS_DESCRIPTOR_METHOD = 'SURF'
     keypoints_pipeline()
+
+"""
+Testing!
+if __name__ == "__main__":
+    matchers = ['BFM_KNN', 'FLANN_KNN']
+    detectors = ['DOH', 'DOG', 'LOG', 'ORB', 'SIFT']
+    descriptors = ['SIFT']
+    SIZE = 512
+    HESSIAN_THRESHOLD = 800
+    hessians = [200, 300, 400, 500]
+    match_ratios = [0.7, 0.55, 0.60, 0.65]
+    MATCH_RATIO = 0.7
+    similarity_thresholds = [5,10,15,20,25,30,35,40,50,60]
+    for matcher in matchers:
+        print('With matcher {}'.format(matcher))
+        KEYPOINTS_MATHCER = matcher
+        for match_ratio in match_ratios:
+            print('Match ratio: {}'.format(match_ratio))
+            MATCH_RATIO = match_ratio
+            for detector in detectors:
+                print('With detector {}'.format(detector))
+                KEYPOINTS_DETECTOR = detector
+                if KEYPOINTS_DETECTOR == 'SURF':
+                    for hessian in hessians:
+                        print('With Hessian threshold {}'.format(hessian))
+                        HESSIAN_THRESHOLD = hessian
+                        for descriptor in descriptors:
+                            print('With Descriptor {}'.format(descriptor))
+                            KEYPOINTS_DESCRIPTOR = descriptor
+                            if KEYPOINTS_DESCRIPTOR == 'SURF' or KEYPOINTS_DESCRIPTOR == 'SIFT':
+                                for t in [cv2.NORM_L1, cv2.NORM_L2]:
+                                    if t == cv2.NORM_L1:
+                                        print('With match type NORM_L1')
+                                    else:                                        
+                                        print('With match type NORM_L2')
+                                    MATCH_TYPE = t
+                                    for sim in similarity_thresholds:
+                                        SIMILARITY_THRESHOLD = sim
+                                        print('With similarity {}'.format(sim))
+                                        keypoints_pipeline()
+                            else:
+                                for t in [cv2.NORM_HAMMING, cv2.NORM_HAMMING2]:
+                                    if t == cv2.NORM_HAMMING2:
+                                        print('With match type NORM_HAMMING2')
+                                    else:
+                                        print('With match type NORM_HAMMING')
+                                    MATCH_TYPE = t
+                                    for sim in similarity_thresholds:
+                                        SIMILARITY_THRESHOLD = sim
+                                        print('With similarity {}'.format(sim))
+                                        keypoints_pipeline()
+
+                else:
+                    for descriptor in descriptors:
+                        print('With Descriptor {}'.format(descriptor))
+                        KEYPOINTS_DESCRIPTOR = descriptor
+                        if KEYPOINTS_DESCRIPTOR == 'SURF' or KEYPOINTS_DESCRIPTOR == 'SIFT':
+                            for t in [cv2.NORM_L1, cv2.NORM_L2]:
+                                if t == cv2.NORM_L1:
+                                    print('With match type NORM_L1')
+                                else:                                        
+                                    print('With match type NORM_L2')
+                                MATCH_TYPE = t
+                                for sim in similarity_thresholds:
+                                    SIMILARITY_THRESHOLD = sim
+                                    print('With similarity {}'.format(sim))
+                                    keypoints_pipeline()
+                        else:
+                            for t in [cv2.NORM_HAMMING, cv2.NORM_HAMMING2]:
+                                if t == cv2.NORM_HAMMING2:
+                                    print('With match type NORM_HAMMING2')
+                                else:
+                                    print('With match type NORM_HAMMING')
+                                MATCH_TYPE = t
+                                for sim in similarity_thresholds:
+                                    SIMILARITY_THRESHOLD = sim
+                                    print('With similarity {}'.format(sim))
+                                    keypoints_pipeline()
+
+            
+"""
