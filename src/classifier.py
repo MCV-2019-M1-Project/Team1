@@ -221,19 +221,19 @@ def hsv_mean_variance_gradient_mean_angle_descriptors(bbdd_paintings):
 
     #Weight descriptors
     hue_mean_descriptor = [v * 4.0 for v in hue_mean_descriptor]
-    hue_variance_descriptor = hue_variance_descriptor
+    hue_variance_descriptor = [v * 2.0 for v in hue_variance_descriptor]
 
     saturation_mean_descriptor = saturation_mean_descriptor
     saturation_variance_descriptor = saturation_variance_descriptor
 
-    value_mean_descriptor = [v * 2.0 for v in value_mean_descriptor]
-    value_variance_descriptor = value_variance_descriptor
+    value_mean_descriptor = [v * 1.0 for v in value_mean_descriptor]
+    value_variance_descriptor = [v * 3.0 for v in value_variance_descriptor]
 
-    laplacian_mean_descriptor = [v * 3.0 for v in laplacian_mean_descriptor]
-    laplacian_variance_descriptor = laplacian_variance_descriptor
+    laplacian_mean_descriptor = [v * 1.0 for v in laplacian_mean_descriptor]
+    laplacian_variance_descriptor = [v * 3.0 for v in laplacian_variance_descriptor]
 
-    sobel_phase_mean_descriptor = [v * 4.0 for v in sobel_phase_mean_descriptor]
-    sobel_phase_variance_descriptor = sobel_phase_variance_descriptor
+    sobel_phase_mean_descriptor = [v * 2.0 for v in sobel_phase_mean_descriptor]
+    sobel_phase_variance_descriptor = [v * 3.0 for v in sobel_phase_variance_descriptor]
 
     #Join descriptors and return
     descriptors = []
@@ -242,11 +242,11 @@ def hsv_mean_variance_gradient_mean_angle_descriptors(bbdd_paintings):
         descriptor.append(hue_mean_descriptor[i])
         descriptor.append(hue_variance_descriptor[i])
 
-        descriptor.append(value_mean_descriptor[i])
-        #descriptor.append(value_variance_descriptor[i])
+        #descriptor.append(value_mean_descriptor[i])
+        descriptor.append(value_variance_descriptor[i])
 
         descriptor.append(laplacian_mean_descriptor[i])
-        #descriptor.append(laplacian_variance_descriptor[i])
+        descriptor.append(laplacian_variance_descriptor[i])
 
         descriptor.append(sobel_phase_mean_descriptor[i])
         #descriptor.append(sobel_phase_variance_descriptor[i])
