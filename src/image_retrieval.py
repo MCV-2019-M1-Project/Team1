@@ -205,7 +205,7 @@ def merge_similarities(sim_by_desc, similarity_threshold=None):
         #print("\t\tApplying similarity threshold on "+str(SIMILARITY_THRESHOLD)+" matches.")
         #Assume one single descriptor and desc_name = keypoints
         matches_per_bbdd_item = list(sim_by_desc.values())[0]
-        if max(matches_per_bbdd_item) < SIMILARITY_THRESHOLD:
+        if max(matches_per_bbdd_item) < similarity_threshold:
             return [-1]
 
 
@@ -235,7 +235,7 @@ def order_by_similarity(bbdd_descriptors, query_descriptor, descriptors_sim, sim
         #print("\t\tNum_matches: ", sim_list)
         sim_by_desc[desc_name] = sim_list[:]
 
-    final_order = merge_similarities(sim_by_desc, SIMILARITY_THRESHOLD)
+    final_order = merge_similarities(sim_by_desc, similarity_threshold)
     #print("\tMerged predictions:",final_order[:10])
     return final_order
 
@@ -255,7 +255,7 @@ def compute_similarity_all_queryset(bbdd_descriptors, query_descriptors, descrip
                     order_by_similarity(bbdd_descriptors,
                                         query_descriptor,
                                         descriptors_sim,
-                                        SIMILARITY_THRESHOLD)[:k_closest]
+                                        similarity_threshold)[:k_closest]
             )
         predictions.append(query_image_result[:])
     return predictions
@@ -399,7 +399,7 @@ def get_map_at_several_ks(query_dir, ks,
                                                   query_descriptors,
                                                   descriptors_sim,
                                                   k_closest=max(ks),
-                                                  similarity_threshold=SIMILARITY_THRESHOLD)
+                                                  similarity_threshold=similarity_threshold)
 
     if submission:
         with open(os.path.join(query_dir, "result.pkl"), "wb") as f:
@@ -466,7 +466,7 @@ def color_pipeline():
 def HOG_pipeline():
     #Solo textura - HOG
     get_map_at_several_ks(
-        query_dir=os.path.join("..","queries","qsd1_w4"),
+        query_dir=os.path.join("..","queries","qsd1_w5"),
         ks=[1, 5, 10, 20],
         descriptors={"texture_hog": hog_descriptor,
                         },
@@ -599,14 +599,11 @@ def keypoints_pipeline():
     )
 
 if __name__ == "__main__":
-    keypoints_pipeline()
-
-"""
-Testing!
-if __name__ == "__main__":
-    matchers = ['BFM_KNN', 'FLANN_KNN']
-    detectors = ['DOH', 'DOG', 'LOG', 'ORB', 'SIFT']
-    descriptors = ['SIFT']
+    HOG_pipeline()
+    """
+    matchers = ['FLANN_KNN']
+    detectors = ['SIFT']
+    descriptors = ['SURF']
     SIZE = 512
     HESSIAN_THRESHOLD = 800
     hessians = [200, 300, 400, 500]
@@ -678,6 +675,4 @@ if __name__ == "__main__":
                                     SIMILARITY_THRESHOLD = sim
                                     print('With similarity {}'.format(sim))
                                     keypoints_pipeline()
-
-            
-"""
+    """
