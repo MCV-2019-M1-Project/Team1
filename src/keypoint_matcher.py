@@ -6,7 +6,7 @@ import sys
 
 # https://docs.opencv.org/3.4/dc/dc3/tutorial_py_matcher.html
 
-def BFM_KNN(des1, des2, norm_type):
+def BFM_KNN(des1, des2, norm_type, match_ratio):
     if des1 is None or des2 is None:
         return 0
        
@@ -16,11 +16,11 @@ def BFM_KNN(des1, des2, norm_type):
     for match in matches:
         if len(match) == 2:
             m, n = match
-            if m.distance < 0.7*n.distance:
+            if m.distance < match_ratio*n.distance:
                 good_matches += 1
     return good_matches
 
-def FLANN_KNN(des1, des2, descriptor='SURF'):
+def FLANN_KNN(des1, des2, match_ratio, descriptor='SURF'):
     if des1 is None or des2 is None:
         return 0
 
@@ -45,6 +45,6 @@ def FLANN_KNN(des1, des2, descriptor='SURF'):
     for match in matches:
         if len(match) == 2:
             m, n = match
-            if m.distance < 0.7*n.distance:
+            if m.distance < match_ratio*n.distance:
                 good_matches += 1
     return good_matches
