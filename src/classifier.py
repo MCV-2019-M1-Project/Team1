@@ -2,59 +2,16 @@ from sklearn.cluster import KMeans
 import itertools
 import numpy as np
 import os
-import cv2
+try:
+    import cv2
+except ImportError:
+    import cv2.cv2 as cv2
 from texture_descriptors import LBP
 
-def k_means_classifier(X, n_clust=10, centroids='random'):
-    """
-    compute k means and return the 5 best labeled paintings for each cluster
-    n_clust: number of clusters in which classify the paintings
-    centroids: init centroids or method to find init centroids ('k-means++', 'random')
-    X: array where every row is one example (image) and every column is a feature.
-    kmeans.labels_ = Labels of each point
-    kmeans.cluster_centers_ = cluster centers
 
-    Returns a List of a list with a tuple which contains the distances to centroids and the image number
-    """
-    km = KMeans(n_clusters=n_clust, init=centroids)
-    compute_km = km.fit(X)
-    dist = km.transform(X)
-    L = compute_km.labels_
-    C = km.cluster_centers_
-    img_indx = list(range(0,X.shape[0]))
-
-    dist_cluster = []
-    for row in dist:
-        dist_cluster.append(min(row))
-
-    dist_clust_list = []
-    for i in range(0, n_clust):
-        lab = L==i
-        distances_by_clust = []
-        for p in range(0, X.shape[0]):
-            if lab[p]==True:
-                distances_by_clust.append(dist_cluster[p])
-            else:
-                distances_by_clust.append('False')
-#        distances_by_clust = list(itertools.compress(dist_cluster, lab))
-        clusters_labeled = list(zip(distances_by_clust,img_indx))
-        dist_clust_list.append(clusters_labeled)
-
-    list_best_labels = []
-    for elem in dist_clust_list:
-        elem.sort(key=lambda x: str(x[0]))
-        for d in range(0, X.shape[0]):
-            if elem[d][0]!= 'False':
-                best_labels = elem[d:d+6]
-                break
-        list_best_labels.append(best_labels)
-#
-
-    return list_best_labels
-
-
-def classify_images_in_clusters(n_clusters, n_best_results_to_show):
+def classify_images_in_clusters(n_clusters, n_best_results_to_show, forced_class = False):
     #Import bbdd paintings
+
     path = os.path.join(os.path.dirname(__file__), '../bbdd')
     bbdd_paintings = []
     for filename in sorted(os.listdir(path)):
@@ -84,6 +41,43 @@ def classify_images_in_clusters(n_clusters, n_best_results_to_show):
     #Obtain n_best_results_to_show
     images_in_clusters = [images_in_cluster[0:n_best_results_to_show] for images_in_cluster in images_in_clusters]
 
+    '''
+    if not forced_class:
+        #to run with kmeans with different descriptors
+
+        #predefined centroid init values for kmeans
+        centroid_imgs = [13, 9, 22, 268, 241, 235, 187, 170, 108, 80]
+
+        #Compute descriptors
+        descriptors = texture_histogram_descriptors(bbdd_paintings)
+
+        #get centroid descriptors for defined centroids
+        calc_centroids = get_centroids(centroid_imgs, descriptors)
+        #k_means clustering
+        km = KMeans(n_clusters, calc_centroids).fit(descriptors)
+        distances = km.transform(descriptors)
+        labels = km.labels_
+
+
+        #Sort results and obtain n_best_results_to_show
+        #Sort by cluster
+        images_in_clusters = [ [] for i in range(n_clusters) ]
+        for i in range(distances.shape[0]):
+            image = bbdd_paintings[i]
+            cluster = labels[i]
+            distance = min(distances[i])
+            images_in_clusters[cluster].append([image, distance])
+        #Sort by distance to cluster center
+        for images_in_cluster in images_in_clusters:
+            images_in_cluster.sort(key=lambda x: x[1])
+        #Obtain n_best_results_to_show
+
+        images_in_clusters = [images_in_cluster[0:n_best_results_to_show] for images_in_cluster in images_in_clusters]
+
+    elif forced_class:
+        #to run without kmeans hue classification
+        images_in_clusters = forced_classifier(bbdd_paintings)
+        '''
     #Show results
     half_ones = np.zeros((250,125,3), np.uint8)
     for i in range(len(images_in_clusters)):
@@ -104,8 +98,9 @@ def color_histogram_descriptors(bbdd_paintings, color_channel=0):
     """
     X=np.empty((0))
     for painting in bbdd_paintings:
+        painting = cv2.cvtColor(painting,cv2.COLOR_BGR2HSV)
         if color_channel==0 or color_channel==1 or color_channel==2:
-            col_hist = cv2.calcHist(painting,[color_channel], None, [256], [0,256])
+            col_hist = cv2.calcHist(painting,[color_channel], None, [20], [0,256])
         elif color_channel==-1:
             col1_hist = cv2.calcHist(painting,[0], None, [256], [0,256])
             col2_hist = cv2.calcHist(painting,[1], None, [256], [0,256])
@@ -134,7 +129,7 @@ def texture_histogram_descriptors(bbdd_paintings):
 def texturecolor_histogram_descriptors(bbdd_paintings, color_channel=0):
     X=np.empty((0))
     for painting in bbdd_paintings:
-
+#        paintinghsv = cv2.cvtColor(painting,cv2.COLOR_BGR2HSV)
         if color_channel==0 or color_channel==1 or color_channel==2:
             col_hist = cv2.calcHist(painting,[color_channel], None, [256], [0,256])
         elif color_channel==-1:
@@ -155,8 +150,8 @@ def texturecolor_histogram_descriptors(bbdd_paintings, color_channel=0):
             X = col_text_hist.T
     return X
 
-def get_centroids(X):
-    cent_imgs = [13, 9, 22, 268, 241, 235, 187, 168, 108, 80]
+def get_centroids(cent_imgs, X):
+#    cent_imgs = [13, 9, 22, 268, 241, 235, 187, 170, 108, 80]
     centroid = np.empty((0))
     for cent in cent_imgs:
         if centroid.size>0:
@@ -480,6 +475,70 @@ def paper_descriptors(bbdd_paintings):
         descriptors.append(descriptor)
     return descriptors
 
+def forced_classifier(paintings):
+
+    clust1=[]
+    clust2=[]
+    clust3=[]
+    clust4=[]
+    clust5=[]
+    clust6=[]
+    clust7=[]
+    clust8=[]
+    clust9=[]
+    clust10=[]
+    clusters=[]
+    for painting in paintings:
+            paintinghsv = cv2.cvtColor(painting,cv2.COLOR_BGR2HSV)
+            H_hist = cv2.calcHist(paintinghsv,[0], None, [256], [0,256])
+            S_hist = cv2.calcHist(paintinghsv,[1], None, [100], [0,100])
+            V_hist = cv2.calcHist(paintinghsv,[2], None, [256], [0,256])
+            max_color = (H_hist == max(H_hist)).flatten()
+            ocurrences = max(H_hist)
+
+            most_probable_color = np.where(max_color==True)[0]
+#            paint_col = np.empty((0))
+            if most_probable_color[0]<=4:
+                paint_col = [painting, ocurrences]
+                clust1.append(paint_col)
+            elif 4<most_probable_color[0]<=7:
+                paint_col = [painting, ocurrences]
+                clust2.append(paint_col)
+            elif 7<most_probable_color[0]<=11:
+                paint_col = [painting, ocurrences]
+                clust3.append(paint_col)
+            elif 11<most_probable_color[0]<=12:
+                paint_col = [painting, ocurrences]
+                clust4.append(paint_col)
+            elif 12<most_probable_color[0]<=15:
+                paint_col = [painting, ocurrences]
+                clust5.append(paint_col)
+            elif 15<most_probable_color[0]<=18:
+                paint_col = [painting, ocurrences]
+                clust6.append(paint_col)
+            elif 18<most_probable_color[0]<=20:
+                paint_col = [painting, ocurrences]
+                clust7.append(paint_col)
+            elif 20<most_probable_color[0]<=25:
+                paint_col = [painting, ocurrences]
+                clust8.append(paint_col)
+            elif 25<most_probable_color[0]<=230:
+                paint_col = [painting, ocurrences]
+                clust9.append(paint_col)
+            elif 230<most_probable_color[0]<=256:
+                paint_col = [painting, ocurrences]
+                clust10.append(paint_col)
+    for i in range (1,11):
+        clust = locals()["clust"+str(i)]
+        clust.sort(key=lambda x: x[1], reverse=True)
+        def_clust = []
+        if len(clust)>=5:
+            [def_clust.append(clust[i]) for i in range(0,5)]
+            clusters.append(def_clust)
+        else:
+            clusters.append(def_clust)
+    return clusters
+
 def normalize(list, new_min, new_max):
     minim = min(list)
     range = float(max(list) - minim)
@@ -488,4 +547,4 @@ def normalize(list, new_min, new_max):
     return ret
 
 #Example of usage
-classify_images_in_clusters(11,5)
+classify_images_in_clusters(10,5)

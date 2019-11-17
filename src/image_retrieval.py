@@ -202,10 +202,10 @@ def merge_similarities(sim_by_desc, similarity_threshold=None):
         return list((v - np.min(v))/np.ptp(v))
 
     if similarity_threshold is not None and len(sim_by_desc) == 1 and 'key' in list(sim_by_desc.keys())[0]:
-        #print("\t\tApplying similarity threshold on "+str(SIMILARITY_THRESHOLD)+" matches.")
+        print("\t\tApplying similarity threshold on "+str(SIMILARITY_THRESHOLD)+" matches.")
         #Assume one single descriptor and desc_name = keypoints
         matches_per_bbdd_item = list(sim_by_desc.values())[0]
-        if max(matches_per_bbdd_item) < SIMILARITY_THRESHOLD:
+        if max(matches_per_bbdd_item) < similarity_threshold:
             return [-1]
 
 
@@ -229,14 +229,14 @@ def order_by_similarity(bbdd_descriptors, query_descriptor, descriptors_sim, sim
     sim_by_desc = {}
 
     for desc_name, desc_obj in query_descriptor.items():
-        #print("\tComputing similarity for descriptor "+desc_name)
+        print("\tComputing similarity for descriptor "+desc_name)
         # De la base de datos, tengo que coger la imagen "i", y dentro de esta SIEMPRE la 0, porque la bbdd solo tiene un cuadro
         sim_list = [descriptors_sim[desc_name](desc_obj, bbdd_descriptors[i][0][desc_name]) for i in sorted(bbdd_descriptors.keys())]
-        #print("\t\tNum_matches: ", sim_list)
+        print("\t\tNum_matches: ", sim_list)
         sim_by_desc[desc_name] = sim_list[:]
 
-    final_order = merge_similarities(sim_by_desc, SIMILARITY_THRESHOLD)
-    #print("\tMerged predictions:",final_order[:10])
+    final_order = merge_similarities(sim_by_desc, similarity_threshold)
+    print("\tMerged predictions:",final_order[:10])
     return final_order
 
 def compute_similarity_all_queryset(bbdd_descriptors, query_descriptors, descriptors_sim, k_closest=20, similarity_threshold=None):
@@ -247,7 +247,7 @@ def compute_similarity_all_queryset(bbdd_descriptors, query_descriptors, descrip
     """
     predictions = []
     for query_key in sorted(query_descriptors.keys()): # Itero sobre todas las queries
-        #print("Computing similarity for query #"+str(query_key))
+        print("Computing similarity for query #"+str(query_key))
         descriptors_list = query_descriptors[query_key] # Lista que contiene un diccionario de descriptores por cada cuadro encontrado
         query_image_result = []
         for query_descriptor in descriptors_list: # query_descriptor es un { desc_name: fun(I) -> obj , ... }
@@ -255,7 +255,7 @@ def compute_similarity_all_queryset(bbdd_descriptors, query_descriptors, descrip
                     order_by_similarity(bbdd_descriptors,
                                         query_descriptor,
                                         descriptors_sim,
-                                        SIMILARITY_THRESHOLD)[:k_closest]
+                                        similarity_threshold)[:k_closest]
             )
         predictions.append(query_image_result[:])
     return predictions
@@ -278,18 +278,18 @@ def get_descriptors_given_query_dir(descriptors_definition,
     :param no_bg: ONLY CONSIDERED IF preprocessing is not None
     :return: dict(im_num -> lista de diccionarios(descriptor_name -> descriptor_value), 1 para cada cuadro encontrado)
     """
-    #print("Getting descriptors for directory: ", folder)
+    print("Getting descriptors for directory: ", folder)
     if not recompute:
         try:
             with open(os.path.join(folder,"descriptors.pkl"), 'rb') as handle:
-                #print("\tGetting cached at "+os.path.join(folder,"descriptors.pkl"))
+                print("\tGetting cached at "+os.path.join(folder,"descriptors.pkl"))
                 ds = pickle.load(handle)
                 return ds
         except FileNotFoundError:
             pass
-            #print("\tNo cached version found. Recomputing...")
+            print("\tNo cached version found. Recomputing...")
 
-    #print("\tRecomputing...")
+    print("\tRecomputing...")
 
     folder_images_paths = [os.path.join(folder, image_filename)
                         for image_filename in
@@ -300,14 +300,14 @@ def get_descriptors_given_query_dir(descriptors_definition,
     descriptors = {k: [{}, {}, {}] for k in [int(os.path.split(x)[-1][-9:-4]) for x in folder_images_paths]}
 
     for image_filepath in folder_images_paths:
-        #print("Current image: "+image_filepath)
+        print("Current image: "+image_filepath)
         im_num = int(os.path.split(image_filepath)[-1][-9:-4])
         if 'bbdd' in folder:
             subpaintings = [cv2.imread(image_filepath)]
         else:
             subpaintings = get_all_subpaintings(cv2.imread(image_filepath))
             subpaintings = [apply_preprocessing(x[-1]) for x in subpaintings]
-        #print("\t"+str(len(subpaintings))+ " paintings were found in the image")
+        print("\t"+str(len(subpaintings))+ " paintings were found in the image")
 
         if kwargs_for_descriptors is None: kwargs_for_descriptors = {}
         for descriptor_name, descriptor_func in descriptors_definition.items():
@@ -319,9 +319,9 @@ def get_descriptors_given_query_dir(descriptors_definition,
                 kwargs_for_this_descriptor.update(image_filepath=image_filepath)
             #try:
             for i, im in enumerate(subpaintings):
-                #print("\tApplying descriptor " + descriptor_name + " to painting #"+str(i)+"... ",end="")
+                print("\tApplying descriptor " + descriptor_name + " to painting #"+str(i)+"... ",end="")
                 descriptors[im_num][i][descriptor_name] = descriptor_func(im, **kwargs_for_this_descriptor)
-                #print("DONE")
+                print("DONE")
             #except BaseException as e:
             #    print(e)
 
@@ -367,8 +367,8 @@ def get_map_at_several_ks(query_dir, ks,
                                                            recompute_bbdd_descriptors,
                                                            kwargs_for_descriptors=kwargs_for_descriptors)
     except Exception as e:
-        #print(" **************** Exception ocurred while getting the bbdd descriptors **************** ")
-        #print(e)
+        print(" **************** Exception ocurred while getting the bbdd descriptors **************** ")
+        print(e)
         raise e
 
     else:
@@ -386,25 +386,25 @@ def get_map_at_several_ks(query_dir, ks,
                                                             single_sure=single_sure,
                                                             kwargs_for_descriptors=kwargs_for_descriptors)
     except Exception as e:
-        #print("**************** Exception ocurred while getting the query descriptors **************** ")
-        #print(e)
+        print("**************** Exception ocurred while getting the query descriptors **************** ")
+        print(e)
         raise e
     else:
         if recompute_query_descriptors:
             with open(os.path.join(query_dir,"descriptors.pkl"), "wb") as f:
                 pickle.dump(query_descriptors, f)
-            #print("Written query descriptors at "+os.path.join(query_dir,"descriptors.pkl"))
+            print("Written query descriptors at "+os.path.join(query_dir,"descriptors.pkl"))
 
     predictions = compute_similarity_all_queryset(bbdd_descriptors,
                                                   query_descriptors,
                                                   descriptors_sim,
                                                   k_closest=max(ks),
-                                                  similarity_threshold=SIMILARITY_THRESHOLD)
+                                                  similarity_threshold=similarity_threshold)
 
     if submission:
         with open(os.path.join(query_dir, "result.pkl"), "wb") as f:
             pickle.dump(predictions, f)
-        #print("Dumped submission results at ",os.path.join(query_dir, "result.pkl"))
+        print("Dumped submission results at ",os.path.join(query_dir, "result.pkl"))
 
     if not submission:
         with open(os.path.join(query_dir,"gt_corresps.pkl") ,'rb') as handle:
@@ -432,16 +432,16 @@ def get_map_at_several_ks(query_dir, ks,
 
         map_ = {k : map_[k]/number_of_paintings_queried for k in map_.keys()}
 
-        #print()
+        print()
 
         print("number_of_paintings_queried: ", number_of_paintings_queried)
         print("number_of_misidentified_number_of_paintings: ",number_of_misidentified_number_of_paintings)
 
-        #print()
+        print()
 
-        #print("On dataset "+os.path.split(query_dir)[-1])
+        print("On dataset "+os.path.split(query_dir)[-1])
 
-        #print()
+        print()
 
         for k, m in sorted(map_.items()):
             print("map@"+str(k)+": "+"%.3f" % m+"\n")
@@ -466,7 +466,7 @@ def color_pipeline():
 def HOG_pipeline():
     #Solo textura - HOG
     get_map_at_several_ks(
-        query_dir=os.path.join("..","queries","qsd1_w4"),
+        query_dir=os.path.join("..","queries","qsd1_w5"),
         ks=[1, 5, 10, 20],
         descriptors={"texture_hog": hog_descriptor,
                         },
@@ -599,14 +599,11 @@ def keypoints_pipeline():
     )
 
 if __name__ == "__main__":
-    keypoints_pipeline()
-
-"""
-Testing!
-if __name__ == "__main__":
-    matchers = ['BFM_KNN', 'FLANN_KNN']
-    detectors = ['DOH', 'DOG', 'LOG', 'ORB', 'SIFT']
-    descriptors = ['SIFT']
+    HOG_pipeline()
+    """
+    matchers = ['FLANN_KNN']
+    detectors = ['SIFT']
+    descriptors = ['SURF']
     SIZE = 512
     HESSIAN_THRESHOLD = 800
     hessians = [200, 300, 400, 500]
@@ -678,6 +675,4 @@ if __name__ == "__main__":
                                     SIMILARITY_THRESHOLD = sim
                                     print('With similarity {}'.format(sim))
                                     keypoints_pipeline()
-
-            
-"""
+    """
