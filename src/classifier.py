@@ -62,10 +62,11 @@ def classify_images_in_clusters(n_clusters, n_best_results_to_show):
         bbdd_paintings.append(painting)
 
     #Compute descriptors
-    descriptors = texture_histogram_descriptors(bbdd_paintings)
-    calc_centroids = get_centroids(descriptors)
+    descriptors = paper_descriptors(bbdd_paintings)
+    print("All descriptors found")
+    #calc_centroids = get_centroids(descriptors)
     #k_means clustering
-    km = KMeans(n_clusters, calc_centroids).fit(descriptors)
+    km = KMeans(n_clusters).fit(descriptors)
     distances = km.transform(descriptors)
     labels = km.labels_
 
@@ -84,12 +85,14 @@ def classify_images_in_clusters(n_clusters, n_best_results_to_show):
     images_in_clusters = [images_in_cluster[0:n_best_results_to_show] for images_in_cluster in images_in_clusters]
 
     #Show results
+    half_ones = np.zeros((250,125,3), np.uint8)
     for i in range(len(images_in_clusters)):
         print(len(images_in_clusters[i]))
-        if(len(images_in_clusters[i])>=4):
+        if(len(images_in_clusters[i])>4):
             numpy_horizontal_concat1 = np.concatenate((cv2.resize(images_in_clusters[i][0][0],(250,250)), cv2.resize(images_in_clusters[i][1][0],(250,250))), axis=1)
             numpy_horizontal_concat2 = np.concatenate((cv2.resize(images_in_clusters[i][2][0],(250,250)), cv2.resize(images_in_clusters[i][3][0],(250,250))), axis=1)
-            numpy_vertical_concat = np.concatenate((numpy_horizontal_concat1, numpy_horizontal_concat2), axis=0)
+            numpy_horizontal_concat3 = np.concatenate((half_ones, cv2.resize(images_in_clusters[i][4][0],(250,250)), half_ones), axis=1)
+            numpy_vertical_concat = np.concatenate((numpy_horizontal_concat1, numpy_horizontal_concat2, numpy_horizontal_concat3), axis=0)
             cv2.imshow('cluster_'+str(i),numpy_vertical_concat)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
@@ -131,7 +134,7 @@ def texture_histogram_descriptors(bbdd_paintings):
 def texturecolor_histogram_descriptors(bbdd_paintings, color_channel=0):
     X=np.empty((0))
     for painting in bbdd_paintings:
-        
+
         if color_channel==0 or color_channel==1 or color_channel==2:
             col_hist = cv2.calcHist(painting,[color_channel], None, [256], [0,256])
         elif color_channel==-1:
@@ -139,11 +142,11 @@ def texturecolor_histogram_descriptors(bbdd_paintings, color_channel=0):
             col2_hist = cv2.calcHist(painting,[1], None, [256], [0,256])
             col3_hist = cv2.calcHist(painting,[2], None, [256], [0,256])
             col_hist = np.concatenate([col1_hist, col2_hist, col3_hist])
-            
+
         image_gray = cv2.cvtColor(painting, cv2.COLOR_BGR2GRAY)
 
         text_hist = np.asarray(LBP(image_gray))
-        
+
         col_text_hist = np.concatenate([col_hist, text_hist])
 
         if X.size>0:
@@ -324,6 +327,159 @@ def hsv_mean_variance_gradient_mean_angle_descriptors(bbdd_paintings):
         descriptors.append(descriptor)
     return descriptors
 
+def paper_descriptors(bbdd_paintings):
+    #Initialize descriptors
+    hue_mean_descriptor = []
+    saturation_mean_descriptor = []
+
+    hue_count_descriptors = []
+
+    composition_descriptors = []
+
+    lbp_descriptors = []
+
+    #Compute descriptors
+    for painting_full_size in bbdd_paintings:
+        painting = cv2.resize(painting_full_size, (500,500))
+        image_gray = cv2.cvtColor(painting, cv2.COLOR_BGR2GRAY)
+        image_hsv = cv2.cvtColor(painting, cv2.COLOR_BGR2HSV)
+        sobelx = cv2.Sobel(image_gray,cv2.CV_64F,1,0,ksize=5)
+        sobely = cv2.Sobel(image_gray,cv2.CV_64F,0,1,ksize=5)
+        sobel_phase = cv2.phase(sobelx,sobely,angleInDegrees=True)
+        laplacian = cv2.Laplacian(image_gray,cv2.CV_64F)
+        hue = image_hsv[:,:,0]
+        saturation = image_hsv[:,:,1]
+        value = image_hsv[:,:,2]
+
+        #COLOR FEATURES
+        #HUE
+        hue_average = hue.mean(axis=0).mean(axis=0)
+        hue_mean_descriptor.append(hue_average)
+
+        #SATURATION
+        saturation_average = saturation.mean(axis=0).mean(axis=0)
+        saturation_mean_descriptor.append(saturation_average)
+
+        #HUE COUNT
+        hue_count_descriptor_aux = []
+        for i in range(20):
+            hue_histogram = cv2.calcHist([image_hsv], [0], None, [9], [i*9, (i+1)*9])
+            hue_max = max(hue_histogram)
+            hue_count = sum(hue_histogram>hue_max*0.1)
+            hue_count_descriptor_aux.append(hue_count[0]/180.0)
+        hue_count_descriptors.append(hue_count_descriptor_aux)
+        '''
+        #COMPOSITION FEATURES
+        #Image segmentation
+        image_as_list = image_hsv.reshape((image_hsv.shape[0]*image_hsv.shape[1], 3))
+        clt = KMeans(n_clusters = 5, init='k-means++')
+        clt.fit(image_as_list)
+        image_segmented_k_means = np.uint8(clt.labels_.reshape((image_hsv.shape[0], image_hsv.shape[1])))
+
+        #Initialize descriptors
+        minus_inf = 0.000000001
+        areas = [0.0, 0.0, 0.0, 0.0, 0.0]
+        x_mean = [0.0, 0.0, 0.0, 0.0, 0.0]
+        y_mean = [0.0, 0.0, 0.0, 0.0, 0.0]
+        xs = [[], [], [], [], []]
+        ys = [[], [], [], [], []]
+        h = [0.0, 0.0, 0.0, 0.0, 0.0]
+        s = [0.0, 0.0, 0.0, 0.0, 0.0]
+        v = [0.0, 0.0, 0.0, 0.0, 0.0]
+
+        #Fill in descriptors
+        for i in range(len(image_segmented_k_means)):
+            for j in range(len(image_segmented_k_means[i])):
+                label = image_segmented_k_means[i][j]
+                areas[label] += 1.0
+                x_mean[label] += i
+                y_mean[label] += j
+                xs[label].append(i)
+                ys[label].append(j)
+                h[label] += image_hsv[i,j,0]
+                s[label] += image_hsv[i,j,1]
+                v[label] += image_hsv[i,j,2]
+
+        for i in range(len(areas)):
+            if(areas[i]==0.0):
+                print("DIV BY 0")
+                x_mean[i] = 250.0
+                y_mean[i] = 250.0
+                h[i] = 0.5
+                s[i] = 0.5
+                v[i] = 0.5
+            else:
+                x_mean[i] = float(x_mean[i]) / float(areas[i])
+                y_mean[i] = float(y_mean[i]) / float(areas[i])
+                h[i] = float(h[i]) / (float(areas[i]) * 180.0)
+                s[i] = float(s[i]) / (float(areas[i]) * 256.0)
+                v[i] = float(v[i]) / (float(areas[i]) * 256.0)
+
+        difxy2 = [0.0, 0.0, 0.0, 0.0, 0.0]
+        difxy3 = [0.0, 0.0, 0.0, 0.0, 0.0]
+
+        for i in range(len(xs)):
+            for j in range(len(xs[i])):
+                difxy2[i] += (xs[i][j] - x_mean[i])**2 + (ys[i][j] - y_mean[i])**2
+                difxy3[i] += (xs[i][j] - x_mean[i])**3 + (ys[i][j] - y_mean[i])**3
+
+        for i in range(len(difxy2)):
+             if(areas[i]==0.0):
+                 difxy2[i] = 0.5
+                 difxy3[i] = 0.5
+                 x_mean[i] = 0.5
+                 y_mean[i] = 0.5
+             else:
+                 difxy2[i] = float(difxy2[i]) / (float(areas[i]) * 500.0**2)
+                 difxy3[i] = float(difxy3[i]) / (float(areas[i]) * 500.0**3)
+                 x_mean[i] = float(x_mean[i]) / 500.0
+                 y_mean[i] = float(y_mean[i]) / 500.0
+
+        #Save descriptors
+        descriptor = []
+        indexs_max_area = sorted(range(len(areas)), reverse=True, key=areas.__getitem__)
+        indexs_max_area = indexs_max_area[0:3]
+        for i in indexs_max_area:
+            descriptor.append(x_mean[i])
+            descriptor.append(y_mean[i])
+            descriptor.append(difxy2[i])
+            descriptor.append(difxy3[i])
+        for i in range(5):
+            descriptor.append(h[i])
+            descriptor.append(s[i])
+            descriptor.append(v[i])
+        composition_descriptors.append(descriptor)
+        '''
+        #LBP histogram
+        lbp_histo = np.asarray(LBP(image_gray.astype('uint8'), resize_level=1, histogram_size=[8]))
+        print(lbp_histo.flatten().shape)
+        lbp_descriptors.append(lbp_histo.flatten())
+
+    #Normalize descriptors
+    hue_mean_descriptor = normalize(hue_mean_descriptor, 0.0, 1.0)
+
+    saturation_mean_descriptor = normalize(saturation_mean_descriptor, 0.0, 1.0)
+
+    #Join descriptors and return
+    descriptors = []
+    for i in range(len(hue_mean_descriptor)):
+        descriptor = []
+        descriptor.append(hue_mean_descriptor[i])
+
+        descriptor.append(saturation_mean_descriptor[i])
+
+        for j in range(len(hue_count_descriptors[i])):
+            descriptor.append(hue_count_descriptors[i][j])
+
+        #for j in range(len(composition_descriptors[i])):
+        #    descriptor.append(composition_descriptors[i][j])
+
+        for j in range(len(lbp_descriptors[i])):
+            descriptor.append(lbp_descriptors[i][j])
+
+        descriptors.append(descriptor)
+    return descriptors
+
 def normalize(list, new_min, new_max):
     minim = min(list)
     range = float(max(list) - minim)
@@ -332,4 +488,4 @@ def normalize(list, new_min, new_max):
     return ret
 
 #Example of usage
-classify_images_in_clusters(10,5)
+classify_images_in_clusters(11,5)
